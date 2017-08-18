@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:id="@+id/root"
+    android:padding="10dip">
+
+    <ImageView
+        android:id="@+id/about_logo"
+        android:layout_width="500dp"
+        android:layout_height="500dp"
+        android:layout_margin="10dip"
+        android:layout_gravity="center"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:layout_centerHorizontal="true"
+        />
+
+    <TextView android:id="@+id/about_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="This is a sample text with image on top"
+        android:gravity="center_horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/about_logo"
+        />
+</RelativeLayout>
