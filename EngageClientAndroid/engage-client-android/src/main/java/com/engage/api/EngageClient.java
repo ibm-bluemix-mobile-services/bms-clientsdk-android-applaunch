@@ -108,7 +108,7 @@ public class EngageClient {
                 //override the default server url to send analytics information
                 EngageAnalytics.overrideServerHost = ANALYZER_URL;
                 //send all the analytics event to the server
-        /*        EngageAnalytics.send(new ResponseListener() {
+                EngageAnalytics.send(new ResponseListener() {
                     @Override
                     public void onSuccess(Response response) {
                         Log.d("Sent logs successfully", response.getResponseText());
@@ -116,9 +116,17 @@ public class EngageClient {
 
                     @Override
                     public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                        Log.e("Failed Sending Logs", t.getMessage() + response.getResponseText() + extendedInfo.toString());
+                        StringBuilder errorMessage = new StringBuilder();
+                        errorMessage.append("Send Logs" + " :" + response.getResponseText());
+                        if(t!=null){
+                            errorMessage.append(":").append(t.getMessage());
+                        }
+                        if(extendedInfo!=null){
+                            errorMessage.append(extendedInfo.toString());
+                        }
+                        Log.e("Failed Sending Logs", errorMessage.toString());
                     }
-                });*/
+                });
                 //add listener to track app events
                 JSONObject initJson = EngageUtils.getInitJson();
                 if (initJson == null) {
@@ -182,7 +190,7 @@ public class EngageClient {
     public void getFeatures(final EngageResponseListener engageResponseListener) {
         try {
             if (null != engageConfig && null != engageConfig.getContext()) {
-                String featureUrl = ANALYZER_URL + "/users/" + engageConfig.getUserID() + "/actions/features";
+                String featureUrl = ANALYZER_URL + "/actions/features";
                 Request getReq = new Request(featureUrl, Request.GET);
 
                 getReq.send(appContext, new ResponseListener() {
@@ -535,7 +543,15 @@ public class EngageClient {
             @Override
             public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                 EngageFailResponse engageFailResponse = new EngageFailResponse();
-                engageFailResponse.setErrorMsg(methodName + " :" + response.getResponseText()+":"+t!=null? t.getMessage():" " + " :" + extendedInfo!=null? extendedInfo.toString():"");
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append(methodName + " :" + response.getResponseText());
+                if(t!=null){
+                    errorMessage.append(":").append(t.getMessage());
+                }
+                if(extendedInfo!=null){
+                    errorMessage.append(extendedInfo.toString());
+                }
+                engageFailResponse.setErrorMsg(errorMessage.toString());
                 engageResponseListener.onFailure(engageFailResponse);
                 Log.d("POST INVOKE FUNCTION:: ", methodName + " " + response.getResponseText());
                 Log.d("Extended info:::", engageFailResponse.getErrorMsg());
@@ -613,6 +629,35 @@ public class EngageClient {
                 //   responseListener.onFailure(response.getResponseText());
             }
         });
+    }
+
+    public void getMessages(Context context, final EngageResponseListener engageResponseListener){
+
+        String messageUrl = ANALYZER_URL+"/actions/messages";
+        Request getReq = new Request(messageUrl, Request.GET);
+        getReq.send(appContext, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+               Log.d("getMessages",response.getResponseText());
+                EngageResponse engageResponse = new EngageResponse();
+                engageResponse.setResponseText(response.getResponseText());
+                engageResponseListener.onSuccess(engageResponse);
+            }
+
+            @Override
+            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
+                //  responseListener.onFailure(response.getResponseText());
+                Log.d("getMessages",response.getResponseText());
+                EngageFailResponse engageFailResponse = new EngageFailResponse();
+                engageFailResponse.setErrorMsg(response.getResponseText());
+                engageResponseListener.onFailure(engageFailResponse);
+
+            }
+        });
+
+
+
+
     }
 
     public void getJsonConfig(final EngageResponseListener responseListener) {
@@ -719,61 +764,12 @@ public class EngageClient {
 //        });
     }
 
-    public void showDialog() {
+    public void showDialog(Context context) {
         LayoutInflater inflater = (LayoutInflater)appContext.getSystemService(LAYOUT_INFLATER_SERVICE);
         View layout = inflater.inflate(R.layout.custom_dialog, null);
-        AlertDialog.Builder adb = new AlertDialog.Builder(appContext);
+        AlertDialog.Builder adb = new AlertDialog.Builder(context);
         adb.setView(layout);
         adb.show();
     }
-
-//    /**
-//     * Implements the android life cycle callbacks to be registered with the application.
-//     * <p>
-//     * Implemented as a singleton so that application callbacks can only be registered once.
-//     */
-//    private static class EngageActivityLifeCycleCallbackListener implements Application.ActivityLifecycleCallbacks {
-//        private static EngageActivityLifeCycleCallbackListener instance;
-//
-//        public static void init(Application app) {
-//            if (instance == null) {
-//                instance = new EngageActivityLifeCycleCallbackListener();
-//
-//                app.registerActivityLifecycleCallbacks(instance);
-//                EngageAnalyticsActivityLifecycleListener.getInstance().onResume();
-//            }
-//        }
-//
-//        @Override
-//        public void onActivityResumed(Activity activity) {
-//            EngageAnalyticsActivityLifecycleListener.getInstance().onResume();
-//        }
-//
-//        @Override
-//        public void onActivityPaused(Activity activity) {
-//            EngageAnalyticsActivityLifecycleListener.getInstance().onPause();
-//        }
-//
-//        // we do not currently instrument any other lifecycle callbacks
-//        @Override
-//        public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-//        }
-//
-//        @Override
-//        public void onActivityStarted(Activity activity) {
-//        }
-//
-//        @Override
-//        public void onActivityStopped(Activity activity) {
-//        }
-//
-//        @Override
-//        public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-//        }
-//
-//        @Override
-//        public void onActivityDestroyed(Activity activity) {
-//        }
-//    }
 
 }
