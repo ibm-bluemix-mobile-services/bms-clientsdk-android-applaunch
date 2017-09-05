@@ -117,6 +117,7 @@ public class EngageClient {
                     @Override
                     public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                         StringBuilder errorMessage = new StringBuilder();
+                        if(response!=null)
                         errorMessage.append("Send Logs" + " :" + response.getResponseText());
                         if(t!=null){
                             errorMessage.append(":").append(t.getMessage());
@@ -165,7 +166,7 @@ public class EngageClient {
                 throw new RuntimeException("Error creating Metrics payload");
             }
             metricJson.put("userId", engageConfig.getUserID());
-            metricJson.put("metric", metric);
+            metricJson.put("metricCode", metric);
             sendPostRequest("SendMetrics", metricsUrl, metricJson, new EngageResponseListener() {
                 @Override
                 public void onSuccess(EngageResponse engageResponse) {
@@ -544,6 +545,7 @@ public class EngageClient {
             public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                 EngageFailResponse engageFailResponse = new EngageFailResponse();
                 StringBuilder errorMessage = new StringBuilder();
+                if(response!=null)
                 errorMessage.append(methodName + " :" + response.getResponseText());
                 if(t!=null){
                     errorMessage.append(":").append(t.getMessage());
@@ -553,8 +555,8 @@ public class EngageClient {
                 }
                 engageFailResponse.setErrorMsg(errorMessage.toString());
                 engageResponseListener.onFailure(engageFailResponse);
-                Log.d("POST INVOKE FUNCTION:: ", methodName + " " + response.getResponseText());
-                Log.d("Extended info:::", engageFailResponse.getErrorMsg());
+                Log.d("POST INVOKE FUNCTION:: ", methodName + " " + errorMessage.toString());
+                Log.d("Extended info:::", errorMessage.toString());
                 //  responseListener.onFailure("FAILURE:: invoke function push failed");
             }
         });
