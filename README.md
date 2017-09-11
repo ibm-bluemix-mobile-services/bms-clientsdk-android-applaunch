@@ -15,7 +15,7 @@ Ensure that you go through [Bluemix Engage service documentation](https://consol
 - [Installation](#installation)
 - [Initialize SDK](#initialize-sdk)
 	- [Include client Push SDK with Gradle](#include-client-push-sdk-with-gradle)
-	- [Include core SDK and Push SDK](#include-core-sdk-and-push-sdk)	
+	- [Include core SDK and Push SDK](#include-core-sdk-and-engage-sdk)	
 - [Register for notifications](#register-for-notifications)
 	- [Receiving notifications](#receiving-notifications)
 	- [Unregistering from notifications](#unregistering-from-notifications)
