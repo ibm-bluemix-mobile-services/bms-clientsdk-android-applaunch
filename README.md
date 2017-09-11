@@ -14,23 +14,13 @@ Ensure that you go through [Bluemix Engage service documentation](https://consol
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Initialize SDK](#initialize-sdk)
-	- [Include client Push SDK with Gradle](#include-client-push-sdk-with-gradle)
-	- [Include core SDK and Push SDK](#include-core-sdk-and-engage-sdk)	
-- [Register for notifications](#register-for-notifications)
-	- [Receiving notifications](#receiving-notifications)
-	- [Unregistering from notifications](#unregistering-from-notifications)
-- [Push Notifications service tags](#push-notifications-service-tags)
-	- [Retrieve tags](#retrieve-tags)
-	- [Subscribe to tags](#subscribe-to-tags)
-	- [Retrieve subscribed tags](#retrieve-subscribed-tags)
-	- [Unsubscribe from tags](#unsubscribe-from-tags)
-- [Notification options](#notification-options)
-	- [Interactive notifications](#interactive-notifications)
-	- [Adding custom DeviceId for registration](#adding-custom-deviceid-for-registration)
-	- [Advanced options](#advanced-options)
-	- [Holding notifications](#holding-notifications)
-- [Monitoring](#monitoring)
-	- [Listening to the DISMISSED status](#listening-to-the-dismissed-status)
+	- [Include client Engage SDK](#include-client-engage-sdk)
+	- [Initialize](#initialize)	
+- [Feature Toggle](#feature-toggle)
+	- [Check if feature is enabled](#check-if-feature-is-enabled)
+	- [Get variable for feature](#get-variable-for-feature)
+- [Metrics](#metrics)
+	- [Send Metrics](#send-metrics)
 - [Samples and videos](#samples-and-videos)
 
 
@@ -76,9 +66,7 @@ Import `engage-client-android.aar` as a module into the project and Configure th
      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 	 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 	 ```
-
-### Include core SDK and Engage SDK
-
+### Initialize
 A common place to put the initialization code is the`onCreate()`method of the `main activity` in your Android application: 
 
 ```
