@@ -92,7 +92,7 @@ Where `bluemixRegionSuffix` specifies the location where the app is hosted. You 
 - `BMSClient.REGION_SYDNEY`
 
 The `appGUID` is the engage app GUID value, while `clientSecret` is the engage client secret value which can be obtained from the service console.
-
+**Note: initialize should be the first call in the application.
 
 ## Feature Toggle
 
