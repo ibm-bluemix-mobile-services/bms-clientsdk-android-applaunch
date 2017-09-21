@@ -8,7 +8,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.engage.EngageFailResponse;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import static android.content.Context.LAYOUT_INFLATER_SERVICE;
+import static com.engage.R.id.buttonpanel;
 
 /**
  * Created by norton on 7/21/17.
@@ -105,7 +108,7 @@ public class EngageClient {
                 throw new Exception("EngageCore:initialize() - An error occured while initializing EngageClient service. Invalid context", null);
             }
 
-             init(engageResponseListener);
+            init(engageResponseListener);
         } catch (Exception e) {
             EngageFailResponse engageFailResponse = new EngageFailResponse();
             engageFailResponse.setErrorMsg(e.getMessage());
@@ -123,7 +126,8 @@ public class EngageClient {
         EngageAnalytics.send(new ResponseListener() {
             @Override
             public void onSuccess(Response response) {
-                Log.d("Sent logs successfully", response.getResponseText());
+                if(response!=null)
+                    Log.d("Sent logs successfully", response.getResponseText());
             }
 
             @Override
@@ -177,7 +181,7 @@ public class EngageClient {
      *
      * @param metric
      */
-    public void sendMetrics(String metric) {
+    public void sendMetrics(ArrayList<String> metric) {
         String metricsUrl = ANALYZER_URL + "/events/metrics";
         try {
             JSONObject metricJson = EngageUtils.getMetricJson();
@@ -185,16 +189,16 @@ public class EngageClient {
                 throw new RuntimeException("Error creating Metrics payload");
             }
             metricJson.put("userId", engageConfig.getUserID());
-            metricJson.put("metricCode", metric);
+            metricJson.put("metricCodes", metric.toString());
             sendPostRequest("SendMetrics", metricsUrl, metricJson, new EngageResponseListener() {
                 @Override
                 public void onSuccess(EngageResponse engageResponse) {
-
+                    Log.d("sendMetricsSuccess",engageResponse.getResponseText());
                 }
 
                 @Override
                 public void onFailure(EngageFailResponse engageFailResponse) {
-
+                    Log.d("sendMetricsFailure",engageFailResponse.getErrorMsg());
                 }
             });
         } catch (Exception ex) {
@@ -565,7 +569,7 @@ public class EngageClient {
                 EngageFailResponse engageFailResponse = new EngageFailResponse();
                 StringBuilder errorMessage = new StringBuilder();
                 if(response!=null)
-                errorMessage.append(methodName + " :" + response.getResponseText());
+                    errorMessage.append(methodName + " :" + response.getResponseText());
                 if(t!=null){
                     errorMessage.append(":").append(t.getMessage());
                 }
@@ -659,7 +663,7 @@ public class EngageClient {
         getReq.send(appContext, new ResponseListener() {
             @Override
             public void onSuccess(Response response) {
-               Log.d("getMessages",response.getResponseText());
+                Log.d("getMessages",response.getResponseText());
                 if(renderUi){
                     try{
                         String jsonResponse="{\n" +
@@ -676,17 +680,36 @@ public class EngageClient {
                                 "    \"buttons\": [{\n" +
                                 "      \"name\": \"Ok\",\n" +
                                 "      \"action\": \"okaction\",\n" +
-                                "      \"metrics\": [{\n" +
+                                "      \"metrics\": [\n" +
+                                "      {\n" +
                                 "        \"name\": \"bannermessage\",\n" +
                                 "        \"code\": \"0x45454\"\n" +
-                                "      }]\n" +
+                                "      }, \n" +
+                                "      {\n" +
+                                "        \"name\": \"message\",\n" +
+                                "        \"code\": \"0x45654\"\n" +
+                                "      }\n" +
+                                "      ]\n" +
+                                "    },{\n" +
+                                "      \"name\": \"Cancel\",\n" +
+                                "      \"action\": \"cancelaction\",\n" +
+                                "      \"metrics\": [\n" +
+                                "      {\n" +
+                                "        \"name\": \"cancelmessage\",\n" +
+                                "        \"code\": \"0x45454\"\n" +
+                                "      }, \n" +
+                                "      {\n" +
+                                "        \"name\": \"cancel\",\n" +
+                                "        \"code\": \"0x45654\"\n" +
+                                "      }\n" +
+                                "      ]\n" +
                                 "    }]\n" +
                                 "  }\n" +
                                 "  ],\n" +
                                 "  \"permissions\": [],\n" +
                                 "  \"carousel\": []\n" +
                                 "}";
-                        JSONObject messageJson = new JSONObject(jsonResponse);
+                        JSONObject messageJson = new JSONObject(response.getResponseText());
                         processInAppMessages(context,messageJson);
                     }catch (Exception ex){
                         EngageFailResponse engageFailResponse = new EngageFailResponse();
@@ -704,43 +727,12 @@ public class EngageClient {
 
             @Override
             public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                //  responseListener.onFailure(response.getResponseText());
-                try{
-                    String jsonResponse="{\n" +
-                            "  \"inApp\": [\n" +
-                            "  {\n" +
-                            "    \"name\": \"bannermessage\",\n" +
-                            "    \"layout\": \"banner\",\n" +
-                            "    \"title\": \"Hey there banner\",\n" +
-                            "    \"subtitle\": \"Welcome banner\",\n" +
-                            "    \"imageUrl\": \"https://goo.gl/bktLai\",\n" +
-                            "    \"customConfig\": {\n" +
-                            "      \"name\": \"voice\"\n" +
-                            "    },\n" +
-                            "    \"buttons\": [{\n" +
-                            "      \"name\": \"Ok\",\n" +
-                            "      \"action\": \"okaction\",\n" +
-                            "      \"metrics\": [{\n" +
-                            "        \"name\": \"bannermessage\",\n" +
-                            "        \"code\": \"0x45454\"\n" +
-                            "      }]\n" +
-                            "    }]\n" +
-                            "  }\n" +
-                            "  ],\n" +
-                            "  \"permissions\": [],\n" +
-                            "  \"carousel\": []\n" +
-                            "}";
-                    JSONObject messageJson = new JSONObject(jsonResponse);
-                    processInAppMessages(context,messageJson);
-                }catch (Exception ex){
-                    Log.e("Error InApp", ex.getMessage());
+                if(response!=null){
+                    Log.d("getMessages",response.getResponseText());
+                    EngageFailResponse engageFailResponse = new EngageFailResponse();
+                    engageFailResponse.setErrorMsg(response.getResponseText());
+                    engageResponseListener.onFailure(engageFailResponse);
                 }
-
-/*               Log.d("getMessages",response.getResponseText());
-                EngageFailResponse engageFailResponse = new EngageFailResponse();
-               engageFailResponse.setErrorMsg(response.getResponseText());
-                engageResponseListener.onFailure(engageFailResponse);*/
-
             }
         });
     }
@@ -830,96 +822,6 @@ public class EngageClient {
         }
     }
 
-    private void displayBannerDialog1(Context context,MessageData messageData){
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-
-
-
-//        if(null!=messageData.getButtonOne()){
-//            builder.setPositiveButton(messageData.getButtonOne().getButtonName(), new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which) {
-//                }
-//            });
-//        }
-//
-//        if(null!=messageData.getButtonTwo()){
-//           builder.setNegativeButton(messageData.getButtonTwo().getButtonName(), new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which) {
-//                }
-//            });
-//        }
-
-
-        final AlertDialog dialog = builder.create();
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
-        View dialogLayout = inflater.inflate(R.layout.banner_dialog_layout, null);
-        dialog.setView(dialogLayout);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        ImageView image = (ImageView) dialogLayout.findViewById(R.id.goProDialogImage);
-        Picasso.with(context).load(messageData.getImageUrl()).placeholder(R.drawable.placeholder_image).into(image);
-        // Picasso.with(context).load("https://goo.gl/bktLai").placeholder(R.mipmap.ic_launcher).into(image);
-        TextView titleView = (TextView) dialogLayout.findViewById(R.id.title);
-        titleView.setText(messageData.getTitle());
-        TextView subTitleView = (TextView) dialogLayout.findViewById(R.id.subtitle);
-        subTitleView.setText(messageData.getSubTitle());
-
-        //add buttons to the banner
-     //   LinearLayout buttonPanel = (LinearLayout) dialogLayout.findViewById(R.id.buttonPanel);
-     //   ArrayList<ButtonData> buttonDataList = messageData.getButtonDataList();
-    /*    for(ButtonData buttonData : buttonDataList) {
-            android.widget.Button dialogButton = new android.widget.Button(context);
-            buttonPanel.addView(dialogButton);
-            dialogButton.setTag(buttonData);
-            dialogButton.setText(buttonData.getButtonName());
-//            dialogButton.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    ButtonData buttonDataTag = (ButtonData) v.getTag();
-//
-//                }
-//            });
-
-        }*/
-        dialog.show();
-//
-//        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-//            @Override
-//            public void onShow(DialogInterface d) {
-////                ImageView image = (ImageView) dialog.findViewById(R.id.goProDialogImage);
-////                Bitmap icon=null;
-////                try {
-////            //        icon = new GetBitmapImage().execute("https://goo.gl/bktLai").get();
-////                    if(icon!=null){
-//////                        Bitmap icon = BitmapFactory.decodeResource(HomeActivity.this.getResources(),
-//////                                R.drawable.android_oreo);
-////                        float imageWidthInPX = (float)image.getWidth();
-////
-////                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(Math.round(imageWidthInPX),
-////                                Math.round(imageWidthInPX * (float)icon.getHeight() / (float)icon.getWidth()));
-////                        image.setLayoutParams(layoutParams);
-////                    }
-////                } catch (InterruptedException e) {
-////                    e.printStackTrace();
-////                } catch (ExecutionException e) {
-////                    e.printStackTrace();
-////                }
-//
-//
-////                Bitmap icon = BitmapFactory.decodeResource(HomeActivity.this.getResources(),
-////                        R.drawable.android_oreo);
-////                float imageWidthInPX = (float)image.getWidth();
-////
-////                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(Math.round(imageWidthInPX),
-////                        Math.round(imageWidthInPX * (float)icon.getHeight() / (float)icon.getWidth()));
-////                image.setLayoutParams(layoutParams);
-//
-//
-//            }
-//        });
-    }
-
 
     private void displayBannerDialog(Context context,MessageData messageData){
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -934,20 +836,37 @@ public class EngageClient {
         titleView.setText(messageData.getTitle());
         TextView subTitleView = (TextView) dialogLayout.findViewById(R.id.subtitle);
         subTitleView.setText(messageData.getSubTitle());
-        dialog.show();
- /*       LayoutInflater inflater = (LayoutInflater) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
-        View dialogLayout = inflater.inflate(R.layout.banner_dialog_layout, null);
-        dialog.setView(dialogLayout);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        ImageView image = (ImageView) dialogLayout.findViewById(R.id.goProDialogImage);
-        Picasso.with(context).load(messageData.getImageUrl()).placeholder(R.drawable.placeholder_image).into(image);
-        // Picasso.with(context).load("https://goo.gl/bktLai").placeholder(R.mipmap.ic_launcher).into(image);
-        TextView titleView = (TextView) dialogLayout.findViewById(R.id.title);
-        titleView.setText(messageData.getTitle());
-        TextView subTitleView = (TextView) dialogLayout.findViewById(R.id.subtitle);
-        subTitleView.setText(messageData.getSubTitle());
-        dialog.show();*/
+        LinearLayout buttonPanel = (LinearLayout) dialogLayout.findViewById(buttonpanel);
+        ArrayList<ButtonData> buttonDataList = messageData.getButtonDataList();
+        for(ButtonData buttonData : buttonDataList) {
+            Button dialogButton = new Button(context);
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            p.weight = 1;
+            dialogButton.setLayoutParams(p);
+            buttonPanel.addView(dialogButton);
+            dialogButton.setTag(buttonData);
+            dialogButton.setText(buttonData.getButtonName());
+            dialogButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ButtonData buttonDataTag = (ButtonData) v.getTag();
+                    JSONArray metricsList = buttonDataTag.getMetrics();
+                    ArrayList<String> metricCodes = new ArrayList<String>();
+                    for (int i = 0; i < metricsList.length(); i++) {
+                        try {
+                            JSONObject metricObject = (JSONObject) metricsList.get(i);
+                            metricCodes.add(metricObject.getString("code"));
+                        } catch (Exception ex) {
+                            ex.getMessage();
+                        }
+                    }
+                    sendMetrics(metricCodes);
+                    dialog.dismiss();
+                }
+            });
 
+        }
+        dialog.show();
     }
 
 
@@ -1063,5 +982,4 @@ public class EngageClient {
         adb.setView(layout);
         adb.show();
     }
-
 }
