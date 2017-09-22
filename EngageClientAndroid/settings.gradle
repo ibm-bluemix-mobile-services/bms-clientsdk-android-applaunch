@@ -1,1 +1,1 @@
-include ':engage-client-android', ':applaunchsample'
+include ':applaunch-client-android', ':applaunchsample'

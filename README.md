@@ -5,7 +5,7 @@ IBM Bluemix App Launch Android SDK
 [![Build Status](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push.svg?branch=development)](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5c49c09a1f9f45c99c39623f8033d1eb)](https://www.codacy.com/app/ibm-bluemix-mobile-services/bms-clientsdk-android-push?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ibm-bluemix-mobile-services/bms-clientsdk-android-push&amp;utm_campaign=Badge_Grade)
 
-The [Bluemix App Launch service](https://console.ng.bluemix.net/catalog/) Engage service on Bluemix helps in controlled reach of app features. It provides a unified service to customize and personalize your applications to different audience with just few clicks.
+The [Bluemix App Launch service](https://console.ng.bluemix.net/catalog/) App Launch service on Bluemix helps in controlled reach of app features. It provides a unified service to customize and personalize your applications to different audience with just few clicks.
 
 Ensure that you go through [Bluemix App Launch service documentation](https://console.ng.bluemix.net/docs/services/) before you start.
 
@@ -14,33 +14,33 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Initialize SDK](#initialize-sdk)
-	- [Include client App Launch SDK](#include-client-app-launch-sdk)
-	- [Initialize](#initialize)	
-	- [Update User](#update-user)	
+    - [Include client App Launch SDK](#include-client-app-launch-sdk)
+    - [Initialize](#initialize) 
+    - [Update User](#update-user)   
 - [Actions](#actions)
 - [Feature Toggle](#feature-toggle)
-	- [Check if feature is enabled](#check-if-feature-is-enabled)
-	- [Get variable for feature](#get-variable-for-feature)
+    - [Check if feature is enabled](#check-if-feature-is-enabled)
+    - [Get variable for feature](#get-variable-for-feature)
 - [Metrics](#metrics)
-	- [Send Metrics](#send-metrics)
+    - [Send Metrics](#send-metrics)
 - [Samples and videos](#samples-and-videos)
 
 
 ## Prerequisites
 
 
- * [Engage Android Client SDK package](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ibm.mobilefirstplatform.clientsdk.android%22)
+ * [App Launch Android Client SDK package](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ibm.mobilefirstplatform.clientsdk.android%22)
  * Android API level 14 or later
  * Android 4.0 or later
  * [Android Studio](https://developer.android.com/studio/index.html)
  * [Gradle](https://gradle.org/install)
- * [Android HelloEngage sample app](https://github.ibm.com/Engage/bms-samples-android-helloengage)
+ * [Android HelloAppLaunch sample app](https://github.ibm.com/Engage/bms-samples-android-helloengage)
  * [BMSCore](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-core) SDKs installed by using 
   either Android Studio or Gradle
 
 ## Installation
 
-Choose to integrate the Engage Service Android Client SDK package using either of the following options:
+Choose to integrate the App Launch Service Android Client SDK package using either of the following options:
 
 - Download and import the package to your Android Studio project
 
@@ -49,40 +49,40 @@ Choose to integrate the Engage Service Android Client SDK package using either o
 
 ### Include client App Launch SDK 
 
-Import `engage-client-android.aar` as a module into the project and Configure the app module `build.gradle` files.
+Import `applaunch-client-android.aar` as a module into the project and Configure the app module `build.gradle` files.
 
 1. Add Bluemix App Launch Android SDK dependency and BMS Core dependency to your app module `build.gradle` file.
-	
-	```
-	dependencies {
-    	........
-		compile project(':engage-client-android')
-		 compile 'com.ibm.mobilefirstplatform.clientsdk.android:core:[2.0.0,3.0.0)'
-		.......
-	}
-	```
+    
+    ```
+    dependencies {
+        ........
+        compile project(':applaunch-client-android')
+         compile 'com.ibm.mobilefirstplatform.clientsdk.android:core:[2.0.0,3.0.0)'
+        .......
+    }
+    ```
 2. Configure the `AndroidManifest.xml` file. Refer the [example here](https://github.ibm.com/Engage/bms-samples-android-helloengage/blob/master/PizzaDelivery/app/src/main/AndroidManifest.xml). Add the following permissions inside application's `AndroidManifest.xml` file. 
 
-	 ```
-	 <uses-permission android:name="android.permission.INTERNET"/>
+     ```
+     <uses-permission android:name="android.permission.INTERNET"/>
      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-	 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-	 ```
+     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+     ```
 ### Initialize
 A common place to put the initialization code is the`onCreate()`method of the `main activity` in your Android application: 
 
 ```
 // Initialize the SDK
-EngageConfig engageConfig = new EngageConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
-        EngageClient.getInstance().register(engageConfig, new EngageResponseListener() {
+AppLaunchConfig appLaunchConfig = new AppLaunchConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
+        AppLaunch.getInstance().register(appLaunchConfig, new AppLaunchResponseListener() {
             @Override
-            public void onSuccess(EngageResponse engageResponse) {
-                Log.d("MainActivity","Init Successful - "+engageResponse.getResponseText());
+            public void onSuccess(AppLaunchResponse appLaunchResponse) {
+                Log.d("MainActivity","Init Successful - "+appLaunchResponse.getResponseText());
             }
 
             @Override
-            public void onFailure(EngageFailResponse engageFailResponse) {
-                Log.d("MainActivity","Init Failed - "+engageFailResponse.getErrorMsg());
+            public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+                Log.d("MainActivity","Init Failed - "+appLaunchFailResponse.getErrorMsg());
             }
         });
 ```
@@ -93,7 +93,7 @@ Where `bluemixRegionSuffix` specifies the location where the app is hosted. You 
 - `BMSClient.REGION_UK`
 - `BMSClient.REGION_SYDNEY`
 
-The `appGUID` is the engage app GUID value, while `clientSecret` is the engage client secret value which can be obtained from the service console.
+The `appGUID` is the app launch app GUID value, while `clientSecret` is the appLaunch client secret value which can be obtained from the service console.
 
 **Note: register should be the first call in the application.To update user details invoke the updateUser() api**
 
@@ -101,16 +101,16 @@ The `appGUID` is the engage app GUID value, while `clientSecret` is the engage c
 Use this api to update the user post user registration
 
 ```
-EngageConfig engageConfig = new EngageConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
-        EngageClient.getInstance().updateUser(engageConfig, new EngageResponseListener() {
+AppLaunchConfig appLaunchConfig = new AppLaunchConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
+        AppLaunch.getInstance().updateUser(appLaunchConfig, new AppLaunchResponseListener() {
             @Override
-            public void onSuccess(EngageResponse engageResponse) {
-                Log.d("MainActivity","Init Successful - "+engageResponse.getResponseText());
+            public void onSuccess(AppLaunchResponse appLaunchResponse) {
+                Log.d("MainActivity","Init Successful - "+appLaunchResponse.getResponseText());
             }
 
             @Override
-            public void onFailure(EngageFailResponse engageFailResponse) {
-                Log.d("MainActivity","Init Failed - "+engageFailResponse.getErrorMsg());
+            public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+                Log.d("MainActivity","Init Failed - "+appLaunchFailResponse.getErrorMsg());
             }
         });
 ```
@@ -121,16 +121,16 @@ Where `bluemixRegionSuffix` specifies the location where the app is hosted. You 
 - `BMSClient.REGION_UK`
 - `BMSClient.REGION_SYDNEY`
 
-The `appGUID` is the engage app GUID value, while `clientSecret` is the engage client secret value which can be obtained from the service console.
+The `appGUID` is the app launch app GUID value, while `clientSecret` is the app launch client secret value which can be obtained from the service console.
 
 
 ## Actions
 
 ### Get Actons
 
-Use the ` EngageClient.getInstance().getActions()` API to fetch all the actions assosicated with the application. 
+Use the ` AppLaunch.getInstance().getActions()` API to fetch all the actions assosicated with the application. 
 
-     EngageClient.getInstance().getActions(AppLaunchActions);
+     AppLaunch.getInstance().getActions(AppLaunchActions);
 
 Here AppLaunchActions is an interface which has to be implemented in the application. The interface provides callback methods which gets triggered if the features are present in the actions.        
 
@@ -139,18 +139,18 @@ Here AppLaunchActions is an interface which has to be implemented in the applica
 
 ### Check if feature is enabled
 
-Use the ` EngageClient.getInstance().isFeatureEnabled()` API to check if a particular feature is enabled for the application. This api returns true if the feature is enable for the application else false.
+Use the ` AppLaunch.getInstance().isFeatureEnabled()` API to check if a particular feature is enabled for the application. This api returns true if the feature is enable for the application else false.
 
 
-     EngageClient.getInstance().isFeatureEnabled(featureCode)
+     AppLaunch.getInstance().isFeatureEnabled(featureCode)
  
  **Note:Throws AppLaunchException if isFeatureEnabled is invoked before getActions() api.**    
         
 ### Get variable for feature
-Use the `EngageClient.getInstance().getVariableForFeature()` to fetch the variable corresponding to a feature
+Use the `AppLaunch.getInstance().getVariableForFeature()` to fetch the variable corresponding to a feature
 
-	EngageClient.getInstance().getVariableForFeature("featurecode","variablecode");
-	
+    AppLaunch.getInstance().getVariableForFeature("featurecode","variablecode");
+    
 
 This api returns the varaible corresponding to the variable code for a particular feature.
 
@@ -160,17 +160,17 @@ This api returns the varaible corresponding to the variable code for a particula
 
 ### Send Metrics
 
-To send metrics to the server use the `EngageClient.getInstance().sendMetrics();` api. This sends the metrics information to the server
+To send metrics to the server use the `AppLaunch.getInstance().sendMetrics();` api. This sends the metrics information to the server
 
 ```
- EngageClient.getInstance().sendMetrics("metriccode");
+ AppLaunch.getInstance().sendMetrics("metriccode");
 ```
 
 ## Samples and videos
 
 * For samples, visit - [Github Sample](https:)
 
-* For video tutorials, visit - [Engage Service](https://)
+* For video tutorials, visit - [App Launch Service](https://)
 
 ### Learning More
 

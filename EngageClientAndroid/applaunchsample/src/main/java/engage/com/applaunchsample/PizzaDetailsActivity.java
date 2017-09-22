@@ -5,7 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
-import com.engage.api.EngageClient;
+import com.applaunch.api.AppLaunch;
 
 import java.util.ArrayList;
 
@@ -18,8 +18,8 @@ public class PizzaDetailsActivity extends AppCompatActivity {
         final Button button = (Button) findViewById(R.id.touchid_checkout);
         button.setVisibility(View.GONE);
         try{
-            if(EngageClient.getInstance().isFeatureEnabled("sadas")){
-                final String text = EngageClient.getInstance().getVariableForFeature("sadas","sds");
+            if(AppLaunch.getInstance().isFeatureEnabled("sadas")){
+                final String text = AppLaunch.getInstance().getVariableForFeature("sadas","sds");
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -47,7 +47,7 @@ public class PizzaDetailsActivity extends AppCompatActivity {
             public void onClick(View v) {
                 ArrayList<String> metrics = new ArrayList<String>();
                 metrics.add("_w7xos3fqh");
-                EngageClient.getInstance().sendMetrics(metrics);
+                AppLaunch.getInstance().sendMetrics(metrics);
             }
         });
 

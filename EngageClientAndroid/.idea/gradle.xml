@@ -9,8 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/applaunch-client-android" />
             <option value="$PROJECT_DIR$/applaunchsample" />
-            <option value="$PROJECT_DIR$/engage-client-android" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
