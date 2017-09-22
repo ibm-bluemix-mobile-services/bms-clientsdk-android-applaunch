@@ -40,6 +40,7 @@ import java.util.Map;
 
 import static android.content.Context.LAYOUT_INFLATER_SERVICE;
 import static com.engage.R.id.buttonpanel;
+import static com.engage.common.EngageConstants.ACTIONS_INVOKED;
 
 /**
  * Created by norton on 7/21/17.
@@ -170,6 +171,9 @@ public class EngageClient {
                   public void onSuccess(Response response) {
                      actions = response.getResponseText();
                       if(actions!=null){
+                          SharedPreferences.Editor editor = sharedpreferences.edit();
+                          editor.putBoolean(ACTIONS_INVOKED,true);
+                          editor.commit();
                           try {
                               JSONObject actionsObject = new JSONObject(actions);
                               JSONArray featuresArray =  actionsObject.getJSONArray("features");
@@ -194,11 +198,14 @@ public class EngageClient {
 
 
 
-    public boolean isFeatureEnabled(String featureCode){
-        if (!featureList.isEmpty() && featureList.containsKey(featureCode)) {
-           return true;
+    public boolean isFeatureEnabled(String featureCode) throws AppLaunchException{
+        if(sharedpreferences.getBoolean(EngageConstants.ACTIONS_INVOKED,false)){
+            if (!featureList.isEmpty() && featureList.containsKey(featureCode)) {
+                return true;
+            }
+            return false;
         }
-        return false;
+         throw new AppLaunchException("Invoke getActions() api before isFeatureEnabled()");
     }
 
     /**
@@ -207,29 +214,33 @@ public class EngageClient {
      * @param variableCode
      * @return
      */
-    public String getVariableForFeature(String featureCode, String variableCode) {
-        String returnValue = null;
-        if (featureList.containsKey(featureCode)) {
-            JSONObject featureObject = featureList.get(featureCode);
-            try {
-                JSONArray variableArray = featureObject.getJSONArray("variables");
-                for (int index = 0; index < variableArray.length(); index++) {
-                    try {
-                        JSONObject variableObject = (JSONObject) variableArray.get(index);
-                        if (variableObject.getString("code").equals(variableCode)) {
-                            returnValue = variableObject.getString("value");
-                            break;
+    public String getVariableForFeature(String featureCode, String variableCode) throws AppLaunchException {
+        if(sharedpreferences.getBoolean(EngageConstants.ACTIONS_INVOKED,false)) {
+            String returnValue = null;
+            if (featureList.containsKey(featureCode)) {
+                JSONObject featureObject = featureList.get(featureCode);
+                try {
+                    JSONArray variableArray = featureObject.getJSONArray("variables");
+                    for (int index = 0; index < variableArray.length(); index++) {
+                        try {
+                            JSONObject variableObject = (JSONObject) variableArray.get(index);
+                            if (variableObject.getString("code").equals(variableCode)) {
+                                returnValue = variableObject.getString("value");
+                                break;
+                            }
+                        } catch (JSONException ex) {
+                            continue;
                         }
-                    } catch (JSONException ex) {
-                        continue;
                     }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    returnValue = null;
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
-                returnValue = null;
             }
+            return returnValue;
+        }else{
+            throw new AppLaunchException("Invoke getActions() api before getVariableForFeature()");
         }
-        return returnValue;
     }
 
     /**

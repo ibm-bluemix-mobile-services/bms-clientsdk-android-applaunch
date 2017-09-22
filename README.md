@@ -16,6 +16,7 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 - [Initialize SDK](#initialize-sdk)
 	- [Include client App Launch SDK](#include-client-app-launch-sdk)
 	- [Initialize](#initialize)	
+	- [Update User](#update-user)	
 - [Actions](#actions)
 - [Feature Toggle](#feature-toggle)
 	- [Check if feature is enabled](#check-if-feature-is-enabled)
@@ -94,7 +95,34 @@ Where `bluemixRegionSuffix` specifies the location where the app is hosted. You 
 
 The `appGUID` is the engage app GUID value, while `clientSecret` is the engage client secret value which can be obtained from the service console.
 
-**Note: register should be the first call in the application.**
+**Note: register should be the first call in the application.To update user details invoke the updateUser() api**
+
+### Update User
+Use this api to update the user post user registration
+
+```
+EngageConfig engageConfig = new EngageConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
+        EngageClient.getInstance().updateUser(engageConfig, new EngageResponseListener() {
+            @Override
+            public void onSuccess(EngageResponse engageResponse) {
+                Log.d("MainActivity","Init Successful - "+engageResponse.getResponseText());
+            }
+
+            @Override
+            public void onFailure(EngageFailResponse engageFailResponse) {
+                Log.d("MainActivity","Init Failed - "+engageFailResponse.getErrorMsg());
+            }
+        });
+```
+
+Where `bluemixRegionSuffix` specifies the location where the app is hosted. You can use any of the following values:
+
+- `BMSClient.REGION_US_SOUTH`
+- `BMSClient.REGION_UK`
+- `BMSClient.REGION_SYDNEY`
+
+The `appGUID` is the engage app GUID value, while `clientSecret` is the engage client secret value which can be obtained from the service console.
+
 
 ## Actions
 
@@ -115,7 +143,8 @@ Use the ` EngageClient.getInstance().isFeatureEnabled()` API to check if a parti
 
 
      EngageClient.getInstance().isFeatureEnabled(featureCode)
-     
+ 
+ **Note:Throws AppLaunchException if isFeatureEnabled is invoked before getActions() api.**    
         
 ### Get variable for feature
 Use the `EngageClient.getInstance().getVariableForFeature()` to fetch the variable corresponding to a feature
@@ -124,6 +153,8 @@ Use the `EngageClient.getInstance().getVariableForFeature()` to fetch the variab
 	
 
 This api returns the varaible corresponding to the variable code for a particular feature.
+
+ **Note:Throws AppLaunchException if getVariableForFeature is invoked before getActions() api.** 
 
 ## Metrics
 
