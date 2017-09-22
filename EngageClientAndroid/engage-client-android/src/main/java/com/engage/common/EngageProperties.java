@@ -16,18 +16,6 @@ import java.util.Properties;
 
 public class EngageProperties {
 
-    public static final String VERSION = "version";
-    public static final String ENGAGE_CLIENT_PROPS_NAME = "engageclient.properties";
-    public static final String ENGAGE_SERVER_HOST = "engageServerHost";
-    public static final String ENGAGE_SERVER_PROTOCOL = "engageServerProtocol";
-    public static final String ENGAGE_SERVER_PORT = "engageServerPort";
-    public static final String ENGAGE_SERVER_CONTEXT = "engageServerContext";
-
-    public static final String ANALYZER_SERVER_HOST = "analyzerServerHost";
-    public static final String ANALYZER_SERVER_PROTOCOL = "analyzerServerprotocol";
-    public static final String ANALYZER_SERVER_PORT = "analyzerServerport";
-    public static final String ANALYZER_SERVER_CONTEXT = "analyzerServerContext";
-
 
     private Properties engageProperties = new Properties();
     private Context con;
@@ -38,22 +26,22 @@ public class EngageProperties {
 
         if (!isBOMPresent(context)) {
             try {
-                engageProperties.load(context.getAssets().open(ENGAGE_CLIENT_PROPS_NAME));
+                engageProperties.load(context.getAssets().open(EngageConstants.ENGAGE_CLIENT_PROPS_NAME));
 
                 PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 con = context;
 
                 if (getHost() == null || getHost().isEmpty()) {
-                    throw new RuntimeException("You must specify the server host (engageServerHost) in the client configuration file (" + ENGAGE_CLIENT_PROPS_NAME + ").");
+                    throw new RuntimeException("You must specify the server host (engageServerHost) in the client configuration file (" + EngageConstants.ENGAGE_CLIENT_PROPS_NAME + ").");
                 }
             } catch (IOException e) {
-                throw new RuntimeException("Client configuration file " + ENGAGE_CLIENT_PROPS_NAME + " not found in application assets.");
+                throw new RuntimeException("Client configuration file " + EngageConstants.ENGAGE_CLIENT_PROPS_NAME + " not found in application assets.");
 
             } catch (PackageManager.NameNotFoundException e) {
                 throw new Error(e);
             }
         } else {
-            throw new RuntimeException("Client configuration file " + ENGAGE_CLIENT_PROPS_NAME + " contains a BOM (Byte Order Mark). Save the file without a BOM");
+            throw new RuntimeException("Client configuration file " + EngageConstants.ENGAGE_CLIENT_PROPS_NAME + " contains a BOM (Byte Order Mark). Save the file without a BOM");
         }
 
     }
@@ -67,7 +55,7 @@ public class EngageProperties {
 
     private boolean isBOMPresent(Context context) {
         try {
-            InputStream inputStream = context.getAssets().open(ENGAGE_CLIENT_PROPS_NAME);
+            InputStream inputStream = context.getAssets().open(EngageConstants.ENGAGE_CLIENT_PROPS_NAME);
 
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF8"));
             // BOM marker will only appear at the very beginning
@@ -85,39 +73,36 @@ public class EngageProperties {
 
 
     public String getProtocol() {
-        return engageProperties.getProperty(ENGAGE_SERVER_PROTOCOL);
+        return engageProperties.getProperty(EngageConstants.ENGAGE_SERVER_PROTOCOL);
     }
 
     public String getHost() {
-        return engageProperties.getProperty(ENGAGE_SERVER_HOST);
+        return engageProperties.getProperty(EngageConstants.ENGAGE_SERVER_HOST);
     }
 
     public String getPort() {
-        return engageProperties.getProperty(ENGAGE_SERVER_PORT);
+        return engageProperties.getProperty(EngageConstants.ENGAGE_SERVER_PORT);
     }
 
     public String getServerContext() {
-        return engageProperties.getProperty(ENGAGE_SERVER_CONTEXT);
+        return engageProperties.getProperty(EngageConstants.ENGAGE_SERVER_CONTEXT);
     }
 
 
 
     public String getAnalyzerProtocol() {
-        return engageProperties.getProperty(ANALYZER_SERVER_PROTOCOL);
+        return engageProperties.getProperty(EngageConstants.ANALYZER_SERVER_PROTOCOL);
     }
 
     public String getAnalyzerServerHost() {
-        return engageProperties.getProperty(ANALYZER_SERVER_HOST);
+        return engageProperties.getProperty(EngageConstants.ANALYZER_SERVER_HOST);
     }
 
     public String getAnalyzerServerPort() {
-        return engageProperties.getProperty(ANALYZER_SERVER_PORT);
+        return engageProperties.getProperty(EngageConstants.ANALYZER_SERVER_PORT);
     }
 
     public String getAnalyzerServerContext() {
-        return engageProperties.getProperty(ANALYZER_SERVER_CONTEXT);
+        return engageProperties.getProperty(EngageConstants.ANALYZER_SERVER_CONTEXT);
     }
-
-
-
 }

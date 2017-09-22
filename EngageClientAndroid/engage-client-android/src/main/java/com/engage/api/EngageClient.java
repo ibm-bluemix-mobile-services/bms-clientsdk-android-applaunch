@@ -17,6 +17,7 @@ import com.engage.EngageFailResponse;
 import com.engage.EngageResponse;
 import com.engage.EngageResponseListener;
 import com.engage.R;
+import com.engage.common.EngageConstants;
 import com.engage.common.EngageProperties;
 import com.engage.common.EngageUtils;
 import com.engage.logger.EngageAnalytics;
@@ -59,6 +60,7 @@ public class EngageClient {
     private String userOSType = "android";
     private String userLocale;
     private EngageConfig engageConfig;
+    private static final String APP_LAUNCH = "AppLaunch" ;
     //private String userGender;
     //private int userAge;
     //private long userLatitude;
@@ -69,7 +71,10 @@ public class EngageClient {
     private JSONArray features = null;
     private boolean renderUi = true;
     private HashMap<String, JSONObject> featureList;
+    private SharedPreferences sharedpreferences;
+    private boolean isFirstTimeUser;
 
+    private String actions=null;
     protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + EngageClient.class.getSimpleName());
 
     private static Context appContext = null;
@@ -88,14 +93,15 @@ public class EngageClient {
         return thisInstance;
     }
 
-
     /**
      * @param engageConfig
      * @param engageResponseListener
      */
-    public void initialize(EngageConfig engageConfig, final EngageResponseListener engageResponseListener) {
+    public void registerUser(EngageConfig engageConfig, final EngageResponseListener engageResponseListener) {
         try {
             if (null != engageConfig && null != engageConfig.getContext() && null != engageResponseListener) {
+                sharedpreferences = engageConfig.getApplication().getSharedPreferences(APP_LAUNCH, Context.MODE_PRIVATE);
+                isFirstTimeUser = sharedpreferences.getBoolean(EngageConstants.FIRST_TIME_USER,true);
                 BMSClient.getInstance().initialize(engageConfig.getContext(), BMSClient.REGION_US_SOUTH);
                 this.engageConfig = engageConfig;
                 //  EngageActivityLifeCycleCallbackListener.init(engageConfig.getApplication());
@@ -103,12 +109,22 @@ public class EngageClient {
                 engageProperties = EngageProperties.getInstance(engageConfig.getContext());
                 URL = engageProperties.getProtocol() + "://" + engageProperties.getHost() + ":" + engageProperties.getPort() + engageProperties.getServerContext();
                 ANALYZER_URL = engageProperties.getAnalyzerProtocol() + "://" + engageProperties.getAnalyzerServerHost() + ":" + engageProperties.getAnalyzerServerPort() + engageProperties.getAnalyzerServerContext();
+                ANALYZER_URL += engageConfig.getApplicationId();
+                ANALYZER_URL+="/users/"+engageConfig.getUserID()+"/devices/"+EngageUtils.getDeviceId();
             } else {
                 logger.error("EngageCore:initialize() - An error occured while initializing EngageClient service. Invalid context");
                 throw new Exception("EngageCore:initialize() - An error occured while initializing EngageClient service. Invalid context", null);
             }
+            //proceed to registration only if the user is a first time user
+            if(isFirstTimeUser){
+                init(engageResponseListener);
+            }else{
+                String registrationResponse = sharedpreferences.getString(EngageConstants.REG_RESPONSE,"");
+                EngageResponse engageResponse = new EngageResponse();
+                engageResponse.setResponseText(registrationResponse);
+                engageResponseListener.onSuccess(engageResponse);
+            }
 
-            init(engageResponseListener);
         } catch (Exception e) {
             EngageFailResponse engageFailResponse = new EngageFailResponse();
             engageFailResponse.setErrorMsg(e.getMessage());
@@ -118,6 +134,103 @@ public class EngageClient {
         }
     }
 
+
+    /**
+     * @param engageConfig
+     * @param engageResponseListener
+     */
+    public void updateUser(EngageConfig engageConfig, final EngageResponseListener engageResponseListener) {
+        try {
+            if (null == engageConfig && null == engageConfig.getContext() && null == engageResponseListener) {
+                logger.error("EngageCore:updateUser() - An error occured while updateUser in EngageClient service. Invalid context");
+                throw new Exception("EngageCore:updateUser() -  An error occured while updateUser in EngageClient service. Invalid context", null);
+            }
+            init(engageResponseListener);
+        } catch (Exception e) {
+            EngageFailResponse engageFailResponse = new EngageFailResponse();
+            engageFailResponse.setErrorMsg(e.getMessage());
+            engageResponseListener.onFailure(engageFailResponse);
+            logger.error("EngageCore:updateUser() - An error occured while updateUser EngageCore service.");
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    /**
+     * @param appLaunchActions
+     */
+    public void getActions(final AppLaunchActions appLaunchActions) {
+      if(appLaunchActions!=null){
+          if (null != engageConfig && null != engageConfig.getContext()) {
+              String actionsUrl = ANALYZER_URL + "/actions";
+              Request getReq = new Request(actionsUrl, Request.GET);
+
+              getReq.send(appContext, new ResponseListener() {
+                  @Override
+                  public void onSuccess(Response response) {
+                     actions = response.getResponseText();
+                      if(actions!=null){
+                          try {
+                              JSONObject actionsObject = new JSONObject(actions);
+                              JSONArray featuresArray =  actionsObject.getJSONArray("features");
+                              //process features
+                              processFeatures(featuresArray);
+                              appLaunchActions.onFeaturesReceived(featuresArray.toString());
+                          } catch (JSONException e) {
+                              e.printStackTrace();
+                          }
+                      }
+                  }
+
+                  @Override
+                  public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
+                    Log.d("getActions",response.getResponseText());
+                  }
+              });
+          }
+          }
+      }
+
+
+
+
+    public boolean isFeatureEnabled(String featureCode){
+        if (!featureList.isEmpty() && featureList.containsKey(featureCode)) {
+           return true;
+        }
+        return false;
+    }
+
+    /**
+     * This api returns the variable for the feature code
+     * @param featureCode
+     * @param variableCode
+     * @return
+     */
+    public String getVariableForFeature(String featureCode, String variableCode) {
+        String returnValue = null;
+        if (featureList.containsKey(featureCode)) {
+            JSONObject featureObject = featureList.get(featureCode);
+            try {
+                JSONArray variableArray = featureObject.getJSONArray("variables");
+                for (int index = 0; index < variableArray.length(); index++) {
+                    try {
+                        JSONObject variableObject = (JSONObject) variableArray.get(index);
+                        if (variableObject.getString("code").equals(variableCode)) {
+                            returnValue = variableObject.getString("value");
+                            break;
+                        }
+                    } catch (JSONException ex) {
+                        continue;
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+                returnValue = null;
+            }
+        }
+        return returnValue;
+    }
 
     /**
      * Sends all the analytics event to the server
@@ -152,8 +265,8 @@ public class EngageClient {
             EngageAnalytics.init(engageConfig.getApplication(), engageConfig.getUserID(), "", engageConfig.getClientSecret(), true, Analytics.DeviceEvent.ALL);
             this.clientSecret = engageConfig.getClientSecret();
             this.appGUID = engageConfig.getApplicationId();
-            ANALYZER_URL += engageConfig.getApplicationId();
-            ANALYZER_URL+="/users/"+engageConfig.getUserID()+"/devices/"+EngageUtils.getDeviceId();
+//            ANALYZER_URL += engageConfig.getApplicationId();
+//            ANALYZER_URL+="/users/"+engageConfig.getUserID()+"/devices/"+EngageUtils.getDeviceId();
             //override the default server url to send analytics information
             EngageAnalytics.overrideServerHost = ANALYZER_URL;
             //send all the analytics event to the server
@@ -207,11 +320,25 @@ public class EngageClient {
 
     }
 
+    private void processFeatures(JSONArray features){
+        if(features!=null){
+            try {
+                featureList.clear();
+                for (int index = 0; index < features.length(); index++) {
+                    JSONObject jsonObject = (JSONObject) features.get(index);
+                    featureList.put(jsonObject.getString("code"), jsonObject);
+                }
+            } catch (JSONException e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        }
+    }
+
 
     /**
      * @param engageResponseListener
      */
-    public void getFeatures(final EngageResponseListener engageResponseListener) {
+    private void getFeatures(final EngageResponseListener engageResponseListener) {
         try {
             if (null != engageConfig && null != engageConfig.getContext()) {
                 String featureUrl = ANALYZER_URL + "/actions/features";
@@ -258,7 +385,7 @@ public class EngageClient {
     /**
      * @param featureCode
      */
-    public void isFeatureEnabled(final String featureCode,final EngageResponseListener engageResponseListener) {
+    private void isFeatureEnabled(final String featureCode,final EngageResponseListener engageResponseListener) {
         try {
 
             if (null != engageConfig && null != engageConfig.getContext() && null != featureCode && null!=engageResponseListener) {
@@ -306,37 +433,13 @@ public class EngageClient {
     }
 
 
-    public String getVariableForFeature(String featureCode, String variableCode) {
-        String returnValue = null;
-        if (featureList.containsKey(featureCode)) {
-            JSONObject featureObject = featureList.get(featureCode);
-            try {
-                JSONArray variableArray = featureObject.getJSONArray("variables");
-                for (int index = 0; index < variableArray.length(); index++) {
-                    try {
-                        JSONObject variableObject = (JSONObject) variableArray.get(index);
-                        if (variableObject.getString("code").equals(variableCode)) {
-                            returnValue = variableObject.getString("value");
-                            break;
-                        }
-                    } catch (JSONException ex) {
-                        continue;
-                    }
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-                returnValue = null;
-            }
-        }
-        return returnValue;
-    }
 
 
     /**
      * @param engageConfig
      * @param engageResponseListener
      */
-    public void getThemes(EngageConfig engageConfig, final EngageResponseListener engageResponseListener) {
+    private void getThemes(EngageConfig engageConfig, final EngageResponseListener engageResponseListener) {
         try {
             if (null != engageConfig && null != engageConfig.getContext() && null != engageResponseListener) {
                 Request getReq = new Request(URL + "captivateengine/features", Request.GET);
@@ -366,7 +469,7 @@ public class EngageClient {
      * @param engageConfig
      * @param engageResponseListener
      */
-    public void getCustomizations(EngageConfig engageConfig, final EngageResponseListener engageResponseListener) {
+    private void getCustomizations(EngageConfig engageConfig, final EngageResponseListener engageResponseListener) {
         try {
             if (null != engageConfig && null != engageConfig.getContext() && null != engageResponseListener) {
                 Request getReq = new Request(URL + "captivateengine/features", Request.GET);
@@ -395,7 +498,7 @@ public class EngageClient {
      * @param engageConfig
      * @param engageResponseListener
      */
-    public void getMessages(EngageConfig engageConfig, final EngageResponseListener engageResponseListener) {
+    private void getMessages(EngageConfig engageConfig, final EngageResponseListener engageResponseListener) {
         try {
             if (null != engageConfig && null != engageConfig.getContext() && null != engageResponseListener) {
                 Request getReq = new Request(URL + "captivateengine/features", Request.GET);
@@ -421,11 +524,11 @@ public class EngageClient {
     }
 
 
-    public String getDeviceId() {
+    private String getDeviceId() {
         return deviceId;
     }
 
-    public String getUserLocale() {
+    private String getUserLocale() {
         return userLocale;
     }
 
@@ -435,7 +538,7 @@ public class EngageClient {
      * @param value
      * @param engageResponseListener
      */
-    public void updateUser(String key, String value, final EngageResponseListener engageResponseListener) {
+    private void updateUser(String key, String value, final EngageResponseListener engageResponseListener) {
         if (null != key && null != value && null != engageResponseListener) {
             try {
                 JSONObject jsonObject = EngageUtils.getInitJson();
@@ -473,7 +576,7 @@ public class EngageClient {
      * @param value
      * @param engageResponseListener
      */
-    public void updateUser(String key, int value, final EngageResponseListener engageResponseListener) {
+    private void updateUser(String key, int value, final EngageResponseListener engageResponseListener) {
         if (null != key && null != engageResponseListener) {
             try {
                 JSONObject jsonObject = EngageUtils.getInitJson();
@@ -511,7 +614,7 @@ public class EngageClient {
      * @param value
      * @param engageResponseListener
      */
-    public void updateUser(String key, boolean value, final EngageResponseListener engageResponseListener) {
+    private void updateUser(String key, boolean value, final EngageResponseListener engageResponseListener) {
         if (null != key && null != engageResponseListener) {
             try {
                 JSONObject jsonObject = EngageUtils.getInitJson();
@@ -560,6 +663,12 @@ public class EngageClient {
                 Log.d("POST INVOKE FUNCTION::", response.getResponseText());
                 EngageResponse engageResponse = new EngageResponse();
                 engageResponse.setResponseText(response.getResponseText());
+                if("initialize".equals(methodName) && sharedpreferences!=null){
+                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                    editor.putBoolean(EngageConstants.FIRST_TIME_USER,false);
+                    editor.putString(EngageConstants.REG_RESPONSE,response.getResponseText());
+                    editor.commit();
+                }
                 engageResponseListener.onSuccess(engageResponse);
                 //  responseListener.onSuccess("SUCCESS:: invoke function pushed");
             }

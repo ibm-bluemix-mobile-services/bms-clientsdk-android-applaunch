@@ -1,21 +1,22 @@
-IBM Bluemix Engage Android SDK
+IBM Bluemix App Launch Android SDK
 ==========================================
 
 [![Build Status](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push.svg?branch=master)](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push)
 [![Build Status](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push.svg?branch=development)](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5c49c09a1f9f45c99c39623f8033d1eb)](https://www.codacy.com/app/ibm-bluemix-mobile-services/bms-clientsdk-android-push?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ibm-bluemix-mobile-services/bms-clientsdk-android-push&amp;utm_campaign=Badge_Grade)
 
-The [Bluemix Engage service](https://console.ng.bluemix.net/catalog/) Engage service on Bluemix helps in controlled reach of app features. It provides a unified service to customize and personalize your applications to different audience with just few clicks.
+The [Bluemix App Launch service](https://console.ng.bluemix.net/catalog/) Engage service on Bluemix helps in controlled reach of app features. It provides a unified service to customize and personalize your applications to different audience with just few clicks.
 
-Ensure that you go through [Bluemix Engage service documentation](https://console.ng.bluemix.net/docs/services/) before you start.
+Ensure that you go through [Bluemix App Launch service documentation](https://console.ng.bluemix.net/docs/services/) before you start.
 
 ## Contents
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Initialize SDK](#initialize-sdk)
-	- [Include client Engage SDK](#include-client-engage-sdk)
+	- [Include client App Launch SDK](#include-client-app-launch-sdk)
 	- [Initialize](#initialize)	
+- [Actions](#actions)
 - [Feature Toggle](#feature-toggle)
 	- [Check if feature is enabled](#check-if-feature-is-enabled)
 	- [Get variable for feature](#get-variable-for-feature)
@@ -45,11 +46,11 @@ Choose to integrate the Engage Service Android Client SDK package using either o
 ## Initialize SDK
 
 
-### Include client Engage SDK 
+### Include client App Launch SDK 
 
 Import `engage-client-android.aar` as a module into the project and Configure the app module `build.gradle` files.
 
-1. Add Bluemix Engage Android SDK dependency and BMS Core dependency to your app module `build.gradle` file.
+1. Add Bluemix App Launch Android SDK dependency and BMS Core dependency to your app module `build.gradle` file.
 	
 	```
 	dependencies {
@@ -72,7 +73,7 @@ A common place to put the initialization code is the`onCreate()`method of the `m
 ```
 // Initialize the SDK
 EngageConfig engageConfig = new EngageConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
-        EngageClient.getInstance().initialize(engageConfig, new EngageResponseListener() {
+        EngageClient.getInstance().register(engageConfig, new EngageResponseListener() {
             @Override
             public void onSuccess(EngageResponse engageResponse) {
                 Log.d("MainActivity","Init Successful - "+engageResponse.getResponseText());
@@ -93,26 +94,28 @@ Where `bluemixRegionSuffix` specifies the location where the app is hosted. You 
 
 The `appGUID` is the engage app GUID value, while `clientSecret` is the engage client secret value which can be obtained from the service console.
 
-**Note: initialize should be the first call in the application.**
+**Note: register should be the first call in the application.**
+
+## Actions
+
+### Get Actons
+
+Use the ` EngageClient.getInstance().getActions()` API to fetch all the actions assosicated with the application. 
+
+     EngageClient.getInstance().getActions(AppLaunchActions);
+
+Here AppLaunchActions is an interface which has to be implemented in the application. The interface provides callback methods which gets triggered if the features are present in the actions.        
+
 
 ## Feature Toggle
 
 ### Check if feature is enabled
 
-Use the ` EngageClient.getInstance().isFeatureEnabled()` API to check if a particular feature is enabled for the application. 
+Use the ` EngageClient.getInstance().isFeatureEnabled()` API to check if a particular feature is enabled for the application. This api returns true if the feature is enable for the application else false.
 
 
-     EngageClient.getInstance().isFeatureEnabled("featurecode", new EngageResponseListener() {
-            @Override
-            public void onSuccess(EngageResponse engageResponse) {
-				//perform necessary actions to enable the feature here
-            }
-
-            @Override
-            public void onFailure(EngageFailResponse engageFailResponse) {
-			//perform necessary actions to disable the feature here
-            }
-        });
+     EngageClient.getInstance().isFeatureEnabled(featureCode)
+     
         
 ### Get variable for feature
 Use the `EngageClient.getInstance().getVariableForFeature()` to fetch the variable corresponding to a feature
