@@ -8,12 +8,12 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.engage.EngageFailResponse;
-import com.engage.EngageResponse;
-import com.engage.EngageResponseListener;
-import com.engage.api.AppLaunchActions;
-import com.engage.api.EngageClient;
-import com.engage.api.EngageConfig;
+import com.applaunch.AppLaunchFailResponse;
+import com.applaunch.AppLaunchResponse;
+import com.applaunch.AppLaunchResponseListener;
+import com.applaunch.api.AppLaunchActions;
+import com.applaunch.api.AppLaunch;
+import com.applaunch.api.AppLaunchConfig;
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.BMSClient;
 
 public class HomeActivity extends AppCompatActivity implements AppLaunchActions {
@@ -40,18 +40,18 @@ public class HomeActivity extends AppCompatActivity implements AppLaunchActions 
     private void inializeEngage(){
 
       //  EngageConfig engageConfig = new EngageConfig(getApplication(), BMSClient.REGION_US_SOUTH,"ef3c5a4f-6547-429d-90d5-d49cdffd71c6","4a17f904-8e87-4d92-b7a0-342974955710","norton");
-        EngageConfig engageConfig = new EngageConfig(getApplication(), BMSClient.REGION_US_SOUTH,"f31df428-59a1-4418-8ae6-f886ce50c502","f8bbc9c2-17c2-4a1f-a21b-50c753e3d9e1","norton");
+        AppLaunchConfig appLaunchConfig = new AppLaunchConfig(getApplication(), BMSClient.REGION_US_SOUTH,"f31df428-59a1-4418-8ae6-f886ce50c502","f8bbc9c2-17c2-4a1f-a21b-50c753e3d9e1","norton");
      //   EngageConfig engageConfig = new EngageConfig(getApplication(), BMSClient.REGION_US_SOUTH,"8f6a7c1a-18f6-431c-8159-58396b46c160","6ceeffae-ace2-43c7-b070-6c9fd0bf3ffb","norton-new");
-        EngageClient.getInstance().registerUser(engageConfig, new EngageResponseListener() {
+        AppLaunch.getInstance().registerUser(appLaunchConfig, new AppLaunchResponseListener() {
             @Override
-            public void onSuccess(EngageResponse engageResponse) {
-                Log.d("HomeActivity","Init Successful - "+engageResponse.getResponseText());
-                EngageClient.getInstance().getActions(HomeActivity.this);
+            public void onSuccess(AppLaunchResponse appLaunchResponse) {
+                Log.d("HomeActivity","Init Successful - "+ appLaunchResponse.getResponseText());
+                AppLaunch.getInstance().getActions(HomeActivity.this);
             }
 
             @Override
-            public void onFailure(EngageFailResponse engageFailResponse) {
-                Log.d("HomeActivity","Init Failed - "+engageFailResponse.getErrorMsg());
+            public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+                Log.d("HomeActivity","Init Failed - "+ appLaunchFailResponse.getErrorMsg());
             }
         });
     }
