@@ -17,26 +17,30 @@ public class PizzaDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_pizza_details);
         final Button button = (Button) findViewById(R.id.touchid_checkout);
         button.setVisibility(View.GONE);
-
-        if(EngageClient.getInstance().isFeatureEnabled("sadas")){
-            final String text = EngageClient.getInstance().getVariableForFeature("sadas","sds");
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if(null!=text){
-                        button.setVisibility(View.VISIBLE);
-                        button.setText(text);
+        try{
+            if(EngageClient.getInstance().isFeatureEnabled("sadas")){
+                final String text = EngageClient.getInstance().getVariableForFeature("sadas","sds");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(null!=text){
+                            button.setVisibility(View.VISIBLE);
+                            button.setText(text);
+                        }
                     }
-                }
-            });
-        }else{
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    button.setVisibility(View.GONE);
-                }
-            });
+                });
+            }else{
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        button.setVisibility(View.GONE);
+                    }
+                });
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
         }
+
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -21,5 +21,6 @@ public class EngageConstants {
     //sharedpref keys
     public static final String FIRST_TIME_USER = "isFirstTime";
     public static final String REG_RESPONSE = "regResponse";
+    public static final String ACTIONS_INVOKED="actionsInvoked";
 
 }
