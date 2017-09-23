@@ -782,12 +782,16 @@ public class AppLaunch {
     private void sendPostRequest(final String methodName, String url, JSONObject body, final AppLaunchResponseListener appLaunchResponseListener) {
 
         Request postReq = new Request(url, Request.POST);
-        postReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
+       // postReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
 
         Map<String, List<String>> headers = new HashMap<>();
         List<String> headerValues = new ArrayList<>();
         headerValues.add("application/json");
         headers.put("Content-Type", headerValues);
+        List<String> secretValues = new ArrayList<>();
+        secretValues.add(appLaunchConfig.getClientSecret());
+        headers.put("clientSecret", secretValues);
+       // headers.put("clientSecret",appLaunchConfig.getClientSecret());
         postReq.setHeaders(headers);
 
         postReq.send(appContext, body.toString(), new ResponseListener() {
