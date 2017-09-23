@@ -47,7 +47,7 @@ public class HomeActivity extends AppCompatActivity implements AppLaunchActions 
         appLaunchParameters.put("key","value");
         appLaunchParameters.put("something",false);
         appLaunchParameters.put("another",1);
-        
+
 
         AppLaunch.getInstance().registerUser("norton", appLaunchParameters,new AppLaunchResponseListener() {
             @Override
