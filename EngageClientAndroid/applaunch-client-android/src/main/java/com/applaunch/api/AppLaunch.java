@@ -320,7 +320,7 @@ public class AppLaunch {
           if (null != appLaunchConfig && null != appLaunchConfig.getContext()) {
               String actionsUrl = ANALYZER_URL + "/actions";
               Request getReq = new Request(actionsUrl, Request.GET);
-              getReq.addHeader("appSecret",appLaunchConfig.getClientSecret());
+              getReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
 
               getReq.send(appContext, new ResponseListener() {
                   @Override
@@ -782,7 +782,7 @@ public class AppLaunch {
     private void sendPostRequest(final String methodName, String url, JSONObject body, final AppLaunchResponseListener appLaunchResponseListener) {
 
         Request postReq = new Request(url, Request.POST);
-        postReq.addHeader("appSecret",appLaunchConfig.getClientSecret());
+        postReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
 
         Map<String, List<String>> headers = new HashMap<>();
         List<String> headerValues = new ArrayList<>();
