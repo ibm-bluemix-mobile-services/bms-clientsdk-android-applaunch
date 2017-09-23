@@ -15,6 +15,7 @@ public class AppLaunchConfig {
     private String clientSecret;
     private Context context;
     private String userID;
+    private String customerType;
 
 
     /**
@@ -23,38 +24,47 @@ public class AppLaunchConfig {
      * @param appId
      * @param clientSecret
      */
-    public AppLaunchConfig(Application application, String bluemixRegion, String appId, String clientSecret,
-                           String userId) {
+    protected AppLaunchConfig(Application application, String bluemixRegion, String appId, String clientSecret) {
         this.application = application;
         this.context = application.getApplicationContext();
         this.bluemixRegion = bluemixRegion;
         this.applicationId = appId;
         this.clientSecret = clientSecret;
-        this.userID = userId;
     }
 
-    public Context getContext() {
+    protected Context getContext() {
         return context;
     }
 
-    public String getBluemixRegion() {
+    protected String getBluemixRegion() {
         return bluemixRegion;
     }
 
-    public String getApplicationId() {
+    protected String getApplicationId() {
         return applicationId;
     }
 
-    public String getClientSecret() {
+    protected String getClientSecret() {
         return clientSecret;
     }
 
 
-    public String getUserID() { return userID; }
+    protected String getUserID() { return userID; }
 
 
-    public Application getApplication() {
+    protected Application getApplication() {
         return application;
     }
 
+    protected String getCustomerType() {
+        return customerType;
+    }
+
+    protected void setCustomerType(String customerType) {
+        this.customerType = customerType;
+    }
+
+    protected void setUserID(String userID) {
+        this.userID = userID;
+    }
 }

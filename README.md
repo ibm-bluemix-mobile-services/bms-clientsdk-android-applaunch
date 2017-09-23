@@ -16,6 +16,7 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 - [Initialize SDK](#initialize-sdk)
     - [Include client App Launch SDK](#include-client-app-launch-sdk)
     - [Initialize](#initialize) 
+    - [Register](#register) 
     - [Update User](#update-user)   
 - [Actions](#actions)
 - [Feature Toggle](#feature-toggle)
@@ -73,6 +74,35 @@ A common place to put the initialization code is the`onCreate()`method of the `m
 
 ```
 // Initialize the SDK
+AppLaunchConfig appLaunchConfig = new AppLaunchConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
+        AppLaunch.getInstance().register(appLaunchConfig, new AppLaunchResponseListener() {
+            @Override
+            public void onSuccess(AppLaunchResponse appLaunchResponse) {
+                Log.d("MainActivity","Init Successful - "+appLaunchResponse.getResponseText());
+            }
+
+            @Override
+            public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+                Log.d("MainActivity","Init Failed - "+appLaunchFailResponse.getErrorMsg());
+            }
+        });
+```
+
+Where `bluemixRegionSuffix` specifies the location where the app is hosted. You can use any of the following values:
+
+- `BMSClient.REGION_US_SOUTH`
+- `BMSClient.REGION_UK`
+- `BMSClient.REGION_SYDNEY`
+
+The `appGUID` is the app launch app GUID value, while `clientSecret` is the appLaunch client secret value which can be obtained from the service console.
+
+**Note: register should be the first call in the application.To update user details invoke the updateUser() api**
+
+### Register
+A common place to put the initialization code is the`onCreate()`method of the `main activity` in your Android application: 
+
+```
+// Register the user
 AppLaunchConfig appLaunchConfig = new AppLaunchConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
         AppLaunch.getInstance().register(appLaunchConfig, new AppLaunchResponseListener() {
             @Override

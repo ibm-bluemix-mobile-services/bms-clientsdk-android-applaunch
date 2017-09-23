@@ -22,5 +22,8 @@ public class AppLaunchConstants {
     public static final String FIRST_TIME_USER = "isFirstTime";
     public static final String REG_RESPONSE = "regResponse";
     public static final String ACTIONS_INVOKED="actionsInvoked";
+    public static final String ANALYZER_URL="analyzerUrl";
+    public static final String APP_USER="appUser";
+
 
 }

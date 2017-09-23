@@ -1,6 +1,7 @@
 package com.applaunch.api;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.v7.app.AlertDialog;
@@ -34,7 +35,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -95,30 +98,130 @@ public class AppLaunch {
     }
 
     /**
-     * @param appLaunchConfig
+     * Initialize app details
+     * @param context
+     * @param appGuid
+     * @param clientSecret
+     * @param region
+     */
+    public void initApp(Application context,String region, String appGuid, String clientSecret){
+        if (appGuid != null && context != null && clientSecret!=null && region!=null ) {
+            this.appLaunchConfig = new AppLaunchConfig(context,region,appGuid,clientSecret);
+            appContext = context;
+            sharedpreferences = appLaunchConfig.getApplication().getSharedPreferences(APP_LAUNCH, Context.MODE_PRIVATE);
+            isFirstTimeUser = sharedpreferences.getBoolean(AppLaunchConstants.FIRST_TIME_USER,true);
+            BMSClient.getInstance().initialize(appLaunchConfig.getContext(), region);
+            appLaunchProperties = AppLaunchProperties.getInstance(appLaunchConfig.getContext());
+            URL = appLaunchProperties.getProtocol() + "://" + appLaunchProperties.getHost() + ":" + appLaunchProperties.getPort() + appLaunchProperties.getServerContext();
+            ANALYZER_URL = appLaunchProperties.getAnalyzerProtocol() + "://" + appLaunchProperties.getAnalyzerServerHost() + ":" + appLaunchProperties.getAnalyzerServerPort() + appLaunchProperties.getAnalyzerServerContext();
+            ANALYZER_URL += appLaunchConfig.getApplicationId();
+            String user = sharedpreferences.getString(AppLaunchConstants.APP_USER,null);
+            if(user!=null){
+                appLaunchConfig.setUserID(user);
+            }
+            if(appLaunchConfig.getUserID()!=null && appLaunchConfig.getUserID().length()>0){
+                ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID()+"/devices/"+ AppLaunchUtils.getDeviceId();
+                //override the default server url to send analytics information
+                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
+            }
+
+        }else{
+            throw new RuntimeException("Invalid Init paramters");
+        }
+    }
+
+    /**
+     * @param userId
      * @param appLaunchResponseListener
      */
-    public void registerUser(AppLaunchConfig appLaunchConfig, final AppLaunchResponseListener appLaunchResponseListener) {
+    public void registerUser(String userId, final AppLaunchResponseListener appLaunchResponseListener) {
+        if(appLaunchResponseListener==null|| userId==null)
+            throw new RuntimeException("AppLaunch:register() - arguments cannot be null.", null);
+       register(userId,appLaunchResponseListener,null);
+    }
+
+    /**
+     *
+     * @param userId
+     */
+    public void registerUser(String userId){
+        if(userId==null)
+            throw new RuntimeException("AppLaunch:register() - userId cannot be null.", null);
+        register(userId,null,null);
+    }
+
+
+    /**
+     *
+     * @param userId
+     * @param parameters
+     */
+    public void registerUser(String userId,AppLaunchParameters parameters){
+        if(userId==null|| parameters==null)
+            throw new RuntimeException("AppLaunch:register() - arguemnts cannot be null.", null);
+        register(userId,null,parameters.getParameters());
+    }
+
+
+    /**
+     *
+     * @param userId
+     * @param value
+     */
+    public void registerUser(String userId,String key,String value){
+        if(userId==null|| key==null||value==null)
+            throw new RuntimeException("AppLaunch:register() - arguemnts cannot be null.", null);
+        AppLaunchParameters appLaunchParameters = new AppLaunchParameters();
+        appLaunchParameters.put(key,value);
+        register(userId,null,appLaunchParameters.getParameters());
+    }
+
+
+    /**
+     * @param userId
+     * @param parameters
+     * @param appLaunchResponseListener
+     */
+    public void registerUser(String userId,AppLaunchParameters parameters,AppLaunchResponseListener appLaunchResponseListener) {
+        if(appLaunchResponseListener==null || userId==null || parameters==null)
+            throw new RuntimeException("AppLaunch:register() - arguments  cannot be null.", null);
+        register(userId,appLaunchResponseListener,parameters.getParameters());
+    }
+
+
+    private void register(String userId,AppLaunchResponseListener appLaunchResponseListener, Hashtable parameters){
         try {
-            if (null != appLaunchConfig && null != appLaunchConfig.getContext() && null != appLaunchResponseListener) {
-                sharedpreferences = appLaunchConfig.getApplication().getSharedPreferences(APP_LAUNCH, Context.MODE_PRIVATE);
+            if (null != appLaunchConfig && null != appLaunchConfig.getContext() && userId!=null) {
+                //create a dummy listener if the object is null
+                if(appLaunchResponseListener==null) {
+                    appLaunchResponseListener = new AppLaunchResponseListener() {
+                        @Override
+                        public void onSuccess(AppLaunchResponse appLaunchResponse) {
+
+                        }
+
+                        @Override
+                        public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+
+                        }
+                    };
+                }
+                appLaunchConfig.setUserID(userId);
                 isFirstTimeUser = sharedpreferences.getBoolean(AppLaunchConstants.FIRST_TIME_USER,true);
-                BMSClient.getInstance().initialize(appLaunchConfig.getContext(), BMSClient.REGION_US_SOUTH);
-                this.appLaunchConfig = appLaunchConfig;
-                //  EngageActivityLifeCycleCallbackListener.init(engageConfig.getApplication());
-                appContext = appLaunchConfig.getContext();
-                appLaunchProperties = AppLaunchProperties.getInstance(appLaunchConfig.getContext());
-                URL = appLaunchProperties.getProtocol() + "://" + appLaunchProperties.getHost() + ":" + appLaunchProperties.getPort() + appLaunchProperties.getServerContext();
-                ANALYZER_URL = appLaunchProperties.getAnalyzerProtocol() + "://" + appLaunchProperties.getAnalyzerServerHost() + ":" + appLaunchProperties.getAnalyzerServerPort() + appLaunchProperties.getAnalyzerServerContext();
-                ANALYZER_URL += appLaunchConfig.getApplicationId();
+                if(isFirstTimeUser)
                 ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID()+"/devices/"+ AppLaunchUtils.getDeviceId();
+                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
+                SharedPreferences.Editor editor = sharedpreferences.edit();
+                editor.putString(AppLaunchConstants.ANALYZER_URL,ANALYZER_URL);
+                editor.putString(AppLaunchConstants.APP_USER,userId);
+                editor.commit();
             } else {
-                logger.error("EngageCore:initialize() - An error occured while initializing EngageClient service. Invalid context");
-                throw new Exception("EngageCore:initialize() - An error occured while initializing EngageClient service. Invalid context", null);
+                logger.error("AppLaunch:register() - Invoke initApp() before register");
+                throw new RuntimeException("AppLaunch:register() - Invoke initApp() before register or invalid parameters", null);
             }
             //proceed to registration only if the user is a first time user
             if(isFirstTimeUser){
-                init(appLaunchResponseListener);
+                register(appLaunchResponseListener,parameters);
             }else{
                 String registrationResponse = sharedpreferences.getString(AppLaunchConstants.REG_RESPONSE,"");
                 AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
@@ -135,18 +238,17 @@ public class AppLaunch {
         }
     }
 
-
     /**
-     * @param appLaunchConfig
+     * @param parameters
      * @param appLaunchResponseListener
      */
-    public void updateUser(AppLaunchConfig appLaunchConfig, final AppLaunchResponseListener appLaunchResponseListener) {
+    public void updateUser(AppLaunchParameters parameters, final AppLaunchResponseListener appLaunchResponseListener) {
         try {
-            if (null == appLaunchConfig && null == appLaunchConfig.getContext() && null == appLaunchResponseListener) {
-                logger.error("EngageCore:updateUser() - An error occured while updateUser in EngageClient service. Invalid context");
-                throw new Exception("EngageCore:updateUser() -  An error occured while updateUser in EngageClient service. Invalid context", null);
+            if (null == parameters || null == appLaunchResponseListener) {
+                logger.error("AppLaunch:updateUser() -  arguments cannot be null");
+                throw new RuntimeException("AppLaunch:updateUser() -  arguments cannot be null", null);
             }
-            init(appLaunchResponseListener);
+            register(appLaunchResponseListener,parameters.getParameters());
         } catch (Exception e) {
             AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
             appLaunchFailResponse.setErrorMsg(e.getMessage());
@@ -156,6 +258,42 @@ public class AppLaunch {
         }
     }
 
+    /**
+     * @param key
+     * @param value
+     */
+    public void updateUser(String key,String value) {
+        try {
+            if (null == key || null == value) {
+                logger.error("AppLaunch:updateUser() -  arguments cannot be null");
+                throw new RuntimeException("AppLaunch:updateUser() -  arguments cannot be null", null);
+            }
+            AppLaunchParameters parameters = new AppLaunchParameters();
+            parameters.put(key,value);
+            register(null,parameters.getParameters());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    /**
+     * @param key
+     * @param value
+     */
+    public void updateUser(String key,String value, final AppLaunchResponseListener appLaunchResponseListener) {
+        try {
+            if (null == key || null == value || appLaunchResponseListener==null) {
+                logger.error("AppLaunch:updateUser() -  arguments cannot be null");
+                throw new RuntimeException("AppLaunch:updateUser() -  arguments cannot be null", null);
+            }
+            AppLaunchParameters parameters = new AppLaunchParameters();
+            parameters.put(key,value);
+            register(appLaunchResponseListener,parameters.getParameters());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * @param appLaunchActions
@@ -271,23 +409,26 @@ public class AppLaunch {
     }
 
 
-    private void init(AppLaunchResponseListener appLaunchResponseListener) throws JSONException, Exception{
+    private void register(AppLaunchResponseListener appLaunchResponseListener, Hashtable parameters) throws JSONException, Exception{
         if (AppLaunchUtils.validateString(appLaunchConfig.getClientSecret()) && AppLaunchUtils.validateString(appLaunchConfig.getApplicationId()) && AppLaunchUtils.validateString(appLaunchConfig.getUserID())) {
             AppLaunchAnalytics.init(appLaunchConfig.getApplication(), appLaunchConfig.getUserID(), "", appLaunchConfig.getClientSecret(), true, Analytics.DeviceEvent.ALL);
             this.clientSecret = appLaunchConfig.getClientSecret();
             this.appGUID = appLaunchConfig.getApplicationId();
-//            ANALYZER_URL += engageConfig.getApplicationId();
-//            ANALYZER_URL+="/users/"+engageConfig.getUserID()+"/devices/"+EngageUtils.getDeviceId();
-            //override the default server url to send analytics information
-            AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
             //send all the analytics event to the server
             sendLogs();
             //add listener to track app events
             JSONObject initJson = AppLaunchUtils.getInitJson();
             if (initJson == null) {
-                throw new RuntimeException("Error constructing init json body");
+                throw new RuntimeException("Error constructing register json body");
             }
             initJson.put("userId", appLaunchConfig.getUserID());
+            if(parameters!=null && parameters.size()>0){
+                Enumeration keys = parameters.keys();
+                while(keys.hasMoreElements()){
+                    String key = (String) keys.nextElement();
+                    initJson.put(key,parameters.get(key));
+                }
+            }
             //construct initialze url
             String registrationUrl = URL + "apps/" + appLaunchConfig.getApplicationId() + "/users";
             //post the body to the server
@@ -543,44 +684,6 @@ public class AppLaunch {
         return userLocale;
     }
 
-
-    /**
-     * @param key
-     * @param value
-     * @param appLaunchResponseListener
-     */
-    private void updateUser(String key, String value, final AppLaunchResponseListener appLaunchResponseListener) {
-        if (null != key && null != value && null != appLaunchResponseListener) {
-            try {
-                JSONObject jsonObject = AppLaunchUtils.getInitJson();
-                jsonObject.put(key, value);
-
-                Request getReq = new Request(URL + " /apps/" + "{applicationid}" + "/users/" + "{userid}", Request.GET);
-
-                getReq.send(appContext, new ResponseListener() {
-                    @Override
-                    public void onSuccess(Response response) {
-                        AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                        appLaunchResponseListener.onSuccess(appLaunchResponse);
-                    }
-
-                    @Override
-                    public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                        AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                        appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                    }
-                });
-            } catch (JSONException e) {
-                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                e.printStackTrace();
-            }
-        } else {
-            AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-            appLaunchResponseListener.onFailure(appLaunchFailResponse);
-        }
-
-    }
 
     /**
      * @param key
