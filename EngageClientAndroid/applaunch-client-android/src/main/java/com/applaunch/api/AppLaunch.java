@@ -166,6 +166,7 @@ public class AppLaunch {
     /**
      *
      * @param userId
+     * @param key
      * @param value
      */
     public void registerUser(String userId,String key,String value){
@@ -175,6 +176,23 @@ public class AppLaunch {
         appLaunchParameters.put(key,value);
         register(userId,null,appLaunchParameters.getParameters());
     }
+
+
+    /**
+     *
+     * @param userId
+     * @param key
+     * @param value
+     * @param appLaunchResponseListener
+     */
+    public void registerUser(String userId,String key,String value,AppLaunchResponseListener appLaunchResponseListener){
+        if(userId==null|| key==null||value==null || appLaunchResponseListener==null)
+            throw new RuntimeException("AppLaunch:register() - arguemnts cannot be null.", null);
+        AppLaunchParameters appLaunchParameters = new AppLaunchParameters();
+        appLaunchParameters.put(key,value);
+        register(userId,appLaunchResponseListener,appLaunchParameters.getParameters());
+    }
+
 
 
     /**
