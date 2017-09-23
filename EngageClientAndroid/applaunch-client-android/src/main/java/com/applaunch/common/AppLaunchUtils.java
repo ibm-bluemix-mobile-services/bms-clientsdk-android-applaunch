@@ -1,6 +1,9 @@
 package com.applaunch.common;
 
+import android.app.Application;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.BMSClient;
@@ -22,10 +25,10 @@ import static android.os.Build.VERSION_CODES.LOLLIPOP_MR1;
 public class AppLaunchUtils {
 
     protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + AppLaunchUtils.class.getSimpleName());
-    private static String deviceId=null;
+    private static String deviceId = null;
 
     public static final File getNoBackupFilesDir(Context ctx) {
-        if(android.os.Build.VERSION.SDK_INT <= LOLLIPOP_MR1)
+        if (android.os.Build.VERSION.SDK_INT <= LOLLIPOP_MR1)
             return ctx.getFilesDir();
         else
             return ctx.getNoBackupFilesDir();
@@ -40,39 +43,39 @@ public class AppLaunchUtils {
     }
 
     public static String getDeviceId() {
-        if(deviceId ==null){
+        if (deviceId == null) {
             logger.debug("Computing device ID");
             AuthorizationManager authorizationManager = BMSClient.getInstance().getAuthorizationManager();
             deviceId = authorizationManager.getDeviceIdentity().getId();
             logger.debug("DeviceId obtained from AuthorizationManager is : " + deviceId);
         }
-        return  deviceId;
+        return deviceId;
     }
 
-    public static String computeLocale(){
+    public static String computeLocale() {
         return Locale.getDefault().getLanguage();
     }
 
 
-    private static String getBrand(){
+    private static String getBrand() {
         return Build.MANUFACTURER + Build.BRAND;
     }
 
-    private static String getModel(){
+    private static String getModel() {
         return Build.MODEL;
     }
 
 
-    private static int getOSVersion(){
+    private static int getOSVersion() {
         return Build.VERSION.SDK_INT;
     }
 
-    private static String getPlatform(){
-       // return Locale.getDefault().getLanguage();
+    private static String getPlatform() {
+        // return Locale.getDefault().getLanguage();
         return "android";
     }
 
-    public static JSONObject getInitJson(){
+    public static JSONObject getInitJson(Application application) {
         JSONObject initObject = new JSONObject();
         try {
             initObject.put("model", getModel());
@@ -80,16 +83,36 @@ public class AppLaunchUtils {
             initObject.put("OSVersion", getOSVersion());
             initObject.put("platform", getPlatform());
             initObject.put("deviceId", getDeviceId());
-            initObject.put("appId","com.something.com");
-            initObject.put("appVersion","1.0.0");
-            initObject.put("appName","Testing");
+            initObject.put("appId", getPackageName(application));
+            initObject.put("appVersion", "1.0.0");
+            initObject.put("appName", getAppName(application));
         } catch (JSONException e) {
-            initObject =null;
-            logger.error("Error creating init json "+e.getMessage());
+            initObject = null;
+            logger.error("Error creating init json " + e.getMessage());
             e.printStackTrace();
         }
         return initObject;
     }
+
+    public static String getAppName(Application application) {
+        PackageManager pm = application.getApplicationContext().getPackageManager();
+        ApplicationInfo ai;
+        try {
+            ai = pm.getApplicationInfo(getPackageName(application), 0);
+        } catch (final PackageManager.NameNotFoundException e) {
+            ai = null;
+        }
+        String applicationName = (String) (ai != null ? pm.getApplicationLabel(ai) : "(unknown)");
+        return applicationName;
+    }
+
+
+
+    public static String getPackageName(Application application){
+     return application.getApplicationInfo().packageName;
+    }
+
+
 
     public static JSONObject getSessionJson(){
         JSONObject initObject = new JSONObject();

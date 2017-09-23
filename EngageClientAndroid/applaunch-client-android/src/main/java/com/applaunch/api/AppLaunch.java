@@ -226,19 +226,18 @@ public class AppLaunch {
                 }
                 appLaunchConfig.setUserID(userId);
                 isFirstTimeUser = sharedpreferences.getBoolean(AppLaunchConstants.FIRST_TIME_USER,true);
-                if(isFirstTimeUser)
-                ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID()+"/devices/"+ AppLaunchUtils.getDeviceId();
-                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
-                SharedPreferences.Editor editor = sharedpreferences.edit();
-                editor.putString(AppLaunchConstants.ANALYZER_URL,ANALYZER_URL);
-                editor.putString(AppLaunchConstants.APP_USER,userId);
-                editor.commit();
             } else {
                 logger.error("AppLaunch:register() - Invoke initApp() before register");
                 throw new RuntimeException("AppLaunch:register() - Invoke initApp() before register or invalid parameters", null);
             }
             //proceed to registration only if the user is a first time user
             if(isFirstTimeUser){
+                ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID()+"/devices/"+ AppLaunchUtils.getDeviceId();
+                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
+                SharedPreferences.Editor editor = sharedpreferences.edit();
+                editor.putString(AppLaunchConstants.ANALYZER_URL,ANALYZER_URL);
+                editor.putString(AppLaunchConstants.APP_USER,userId);
+                editor.commit();
                 register(appLaunchResponseListener,parameters);
             }else{
                 String registrationResponse = sharedpreferences.getString(AppLaunchConstants.REG_RESPONSE,"");
@@ -321,6 +320,7 @@ public class AppLaunch {
           if (null != appLaunchConfig && null != appLaunchConfig.getContext()) {
               String actionsUrl = ANALYZER_URL + "/actions";
               Request getReq = new Request(actionsUrl, Request.GET);
+              getReq.addHeader("appSecret",appLaunchConfig.getClientSecret());
 
               getReq.send(appContext, new ResponseListener() {
                   @Override
@@ -435,7 +435,7 @@ public class AppLaunch {
             //send all the analytics event to the server
             sendLogs();
             //add listener to track app events
-            JSONObject initJson = AppLaunchUtils.getInitJson();
+            JSONObject initJson = AppLaunchUtils.getInitJson(appLaunchConfig.getApplication());
             if (initJson == null) {
                 throw new RuntimeException("Error constructing register json body");
             }
@@ -711,7 +711,7 @@ public class AppLaunch {
     private void updateUser(String key, int value, final AppLaunchResponseListener appLaunchResponseListener) {
         if (null != key && null != appLaunchResponseListener) {
             try {
-                JSONObject jsonObject = AppLaunchUtils.getInitJson();
+                JSONObject jsonObject = AppLaunchUtils.getInitJson(appLaunchConfig.getApplication());
                 jsonObject.put(key, value);
                 Request getReq = new Request(URL + "captivateengine/features", Request.GET);
 
@@ -749,7 +749,7 @@ public class AppLaunch {
     private void updateUser(String key, boolean value, final AppLaunchResponseListener appLaunchResponseListener) {
         if (null != key && null != appLaunchResponseListener) {
             try {
-                JSONObject jsonObject = AppLaunchUtils.getInitJson();
+                JSONObject jsonObject = AppLaunchUtils.getInitJson(appLaunchConfig.getApplication());
                 jsonObject.put(key, value);
                 Request getReq = new Request(URL + "captivateengine/features", Request.GET);
 
@@ -782,6 +782,7 @@ public class AppLaunch {
     private void sendPostRequest(final String methodName, String url, JSONObject body, final AppLaunchResponseListener appLaunchResponseListener) {
 
         Request postReq = new Request(url, Request.POST);
+        postReq.addHeader("appSecret",appLaunchConfig.getClientSecret());
 
         Map<String, List<String>> headers = new HashMap<>();
         List<String> headerValues = new ArrayList<>();
