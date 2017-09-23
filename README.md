@@ -74,18 +74,7 @@ A common place to put the initialization code is the`onCreate()`method of the `m
 
 ```
 // Initialize the SDK
-AppLaunchConfig appLaunchConfig = new AppLaunchConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
-        AppLaunch.getInstance().register(appLaunchConfig, new AppLaunchResponseListener() {
-            @Override
-            public void onSuccess(AppLaunchResponse appLaunchResponse) {
-                Log.d("MainActivity","Init Successful - "+appLaunchResponse.getResponseText());
-            }
-
-            @Override
-            public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
-                Log.d("MainActivity","Init Failed - "+appLaunchFailResponse.getErrorMsg());
-            }
-        });
+  AppLaunch.getInstance().initApp(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret");
 ```
 
 Where `bluemixRegionSuffix` specifies the location where the app is hosted. You can use any of the following values:
@@ -96,62 +85,72 @@ Where `bluemixRegionSuffix` specifies the location where the app is hosted. You 
 
 The `appGUID` is the app launch app GUID value, while `clientSecret` is the appLaunch client secret value which can be obtained from the service console.
 
-**Note: register should be the first call in the application.To update user details invoke the updateUser() api**
+**Note: initApp should be the first call in the application.**
 
 ### Register
-A common place to put the initialization code is the`onCreate()`method of the `main activity` in your Android application: 
+To register the user invoke ```AppLaunch.getInstance().registerUser()``` api: 
 
 ```
 // Register the user
-AppLaunchConfig appLaunchConfig = new AppLaunchConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
-        AppLaunch.getInstance().register(appLaunchConfig, new AppLaunchResponseListener() {
+        AppLaunchParameters appLaunchParameters = new AppLaunchParameters();
+        appLaunchParameters.put("customerType","platinum");
+        AppLaunch.getInstance().registerUser("userId", appLaunchParameters,new AppLaunchResponseListener() {
             @Override
             public void onSuccess(AppLaunchResponse appLaunchResponse) {
-                Log.d("MainActivity","Init Successful - "+appLaunchResponse.getResponseText());
-            }
+               
+           }
 
             @Override
             public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
-                Log.d("MainActivity","Init Failed - "+appLaunchFailResponse.getErrorMsg());
+          
             }
         });
 ```
 
-Where `bluemixRegionSuffix` specifies the location where the app is hosted. You can use any of the following values:
+The ```AppLaunchParameters``` can be used to pass any optional custom attributes while registering the user. 
 
-- `BMSClient.REGION_US_SOUTH`
-- `BMSClient.REGION_UK`
-- `BMSClient.REGION_SYDNEY`
+Register users can also be invoked in the following ways:
 
-The `appGUID` is the app launch app GUID value, while `clientSecret` is the appLaunch client secret value which can be obtained from the service console.
+```registerUser(String userId, final AppLaunchResponseListener appLaunchResponseListener)```
 
-**Note: register should be the first call in the application.To update user details invoke the updateUser() api**
+```registerUser(String userId)```
+
+```registerUser(String userId,AppLaunchParameters parameters)```
+
+```registerUser(String userId,String key,String value)```
+
+```registerUser(String userId,String key,String value,AppLaunchResponseListener appLaunchResponseListener)```
+
+```registerUser(String userId,AppLaunchParameters parameters,AppLaunchResponseListener appLaunchResponseListener)```
+
+**Note: To update user details invoke the updateUser() api**
 
 ### Update User
 Use this api to update the user post user registration
 
 ```
-AppLaunchConfig appLaunchConfig = new AppLaunchConfig(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret","user");
-        AppLaunch.getInstance().updateUser(appLaunchConfig, new AppLaunchResponseListener() {
+ AppLaunchParameters appLaunchParameters = new AppLaunchParameters();
+        appLaunchParameters.put("customerType","platinum");
+ AppLaunch.getInstance().updateUser(appLaunchParameters, new AppLaunchResponseListener() {
             @Override
             public void onSuccess(AppLaunchResponse appLaunchResponse) {
-                Log.d("MainActivity","Init Successful - "+appLaunchResponse.getResponseText());
+       
             }
 
             @Override
             public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
-                Log.d("MainActivity","Init Failed - "+appLaunchFailResponse.getErrorMsg());
+   
             }
         });
 ```
 
-Where `bluemixRegionSuffix` specifies the location where the app is hosted. You can use any of the following values:
+The ```AppLaunchParameters``` can be used to pass any optional custom attributes. 
 
-- `BMSClient.REGION_US_SOUTH`
-- `BMSClient.REGION_UK`
-- `BMSClient.REGION_SYDNEY`
+Update user can also be invoked in the following ways:
 
-The `appGUID` is the app launch app GUID value, while `clientSecret` is the app launch client secret value which can be obtained from the service console.
+```updateUser(String key,String value)```
+
+```updateUser(String key,String value, final AppLaunchResponseListener appLaunchResponseListener)```
 
 
 ## Actions
