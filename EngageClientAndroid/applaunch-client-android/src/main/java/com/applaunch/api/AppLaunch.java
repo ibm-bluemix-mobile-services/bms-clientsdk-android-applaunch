@@ -462,17 +462,21 @@ public class AppLaunch {
     /**
      * The metric to be sent to the server
      *
-     * @param metric
+     * @param metrics
      */
-    public void sendMetrics(ArrayList<String> metric) {
+    public void sendMetrics(ArrayList<String> metrics) {
         String metricsUrl = ANALYZER_URL + "/events/metrics";
         try {
             JSONObject metricJson = AppLaunchUtils.getMetricJson();
-            if (metricJson == null) {
+            JSONArray jsonArray = new JSONArray();
+            if (metricJson == null|| metrics==null) {
                 throw new RuntimeException("Error creating Metrics payload");
             }
+            for(String metric:metrics){
+                jsonArray.put(metric);
+            }
             metricJson.put("userId", appLaunchConfig.getUserID());
-            metricJson.put("metricCodes", metric.toString());
+            metricJson.put("metricCodes",jsonArray);
             sendPostRequest("SendMetrics", metricsUrl, metricJson, new AppLaunchResponseListener() {
                 @Override
                 public void onSuccess(AppLaunchResponse appLaunchResponse) {
