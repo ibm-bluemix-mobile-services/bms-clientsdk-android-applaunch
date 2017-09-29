@@ -363,7 +363,7 @@ public class AppLaunch {
      * @param variableCode
      * @return
      */
-    public String getVariableForFeature(String featureCode, String variableCode) throws AppLaunchException {
+    public String getPropertyOfFeature(String featureCode, String variableCode) throws AppLaunchException {
         if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)) {
             String returnValue = null;
             if (featureList.containsKey(featureCode)) {
@@ -388,7 +388,7 @@ public class AppLaunch {
             }
             return returnValue;
         }else{
-            throw new AppLaunchException("Invoke getActions() api before getVariableForFeature()");
+            throw new AppLaunchException("Invoke getActions() api before getPropertyOfFeature()");
         }
     }
 

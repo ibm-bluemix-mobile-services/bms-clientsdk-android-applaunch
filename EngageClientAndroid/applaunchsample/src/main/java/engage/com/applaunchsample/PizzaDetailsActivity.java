@@ -40,7 +40,7 @@ public class PizzaDetailsActivity extends AppCompatActivity implements AppLaunch
     public void onFeaturesReceived(String features) {
         try{
             if(AppLaunch.getInstance().isFeatureEnabled("_intics0gg")){
-                String value = AppLaunch.getInstance().getVariableForFeature("_intics0gg","_4tganfvfg");
+                String value = AppLaunch.getInstance().getPropertyOfFeature("_intics0gg","_4tganfvfg");
                 if(Boolean.valueOf(value)){
                     runOnUiThread(new Runnable() {
                         @Override
