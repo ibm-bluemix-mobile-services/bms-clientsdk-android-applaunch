@@ -19,7 +19,7 @@ public class AppLaunchConstants {
     public static final String ANALYZER_SERVER_CONTEXT = "analyzerServerContext";
 
     //sharedpref keys
-    public static final String FIRST_TIME_USER = "isFirstTime";
+    //public static final String FIRST_TIME_USER = "isFirstTime";
     public static final String REG_RESPONSE = "regResponse";
     public static final String ACTIONS_INVOKED="actionsInvoked";
     public static final String ANALYZER_URL="analyzerUrl";

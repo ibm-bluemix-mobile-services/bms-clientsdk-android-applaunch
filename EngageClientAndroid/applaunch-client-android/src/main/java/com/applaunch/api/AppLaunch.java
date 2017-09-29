@@ -65,10 +65,6 @@ public class AppLaunch {
     private String userLocale;
     private AppLaunchConfig appLaunchConfig;
     private static final String APP_LAUNCH = "AppLaunch" ;
-    //private String userGender;
-    //private int userAge;
-    //private long userLatitude;
-    //private long userLongitude;
     private boolean isInitialized = false;
     private AppLaunchResponseListener myListener;
     SharedPreferences prefs = null;
@@ -76,8 +72,6 @@ public class AppLaunch {
     private boolean renderUi = true;
     private HashMap<String, JSONObject> featureList;
     private SharedPreferences sharedpreferences;
-    private boolean isFirstTimeUser;
-
     private String actions=null;
     protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + AppLaunch.class.getSimpleName());
 
@@ -109,7 +103,7 @@ public class AppLaunch {
             this.appLaunchConfig = new AppLaunchConfig(context,region,appGuid,clientSecret);
             appContext = context;
             sharedpreferences = appLaunchConfig.getApplication().getSharedPreferences(APP_LAUNCH, Context.MODE_PRIVATE);
-            isFirstTimeUser = sharedpreferences.getBoolean(AppLaunchConstants.FIRST_TIME_USER,true);
+         //   isFirstTimeUser = sharedpreferences.getBoolean(AppLaunchConstants.FIRST_TIME_USER,true);
             BMSClient.getInstance().initialize(appLaunchConfig.getContext(), region);
             appLaunchProperties = AppLaunchProperties.getInstance(appLaunchConfig.getContext());
             URL = appLaunchProperties.getProtocol() + "://" + appLaunchProperties.getHost() + ":" + appLaunchProperties.getPort() + appLaunchProperties.getServerContext();
@@ -120,7 +114,7 @@ public class AppLaunch {
                 appLaunchConfig.setUserID(user);
             }
             if(appLaunchConfig.getUserID()!=null && appLaunchConfig.getUserID().length()>0){
-                ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID()+"/devices/"+ AppLaunchUtils.getDeviceId();
+                ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
                 //override the default server url to send analytics information
                 AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
             }
@@ -225,27 +219,26 @@ public class AppLaunch {
                     };
                 }
                 appLaunchConfig.setUserID(userId);
-                isFirstTimeUser = sharedpreferences.getBoolean(AppLaunchConstants.FIRST_TIME_USER,true);
+                //proceed to registration only if the user is a new user
+                if(sharedpreferences.getString(AppLaunchConstants.APP_USER,null)==null){
+                    ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
+                    AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
+                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                    editor.putString(AppLaunchConstants.ANALYZER_URL,ANALYZER_URL);
+                    editor.putString(AppLaunchConstants.APP_USER,userId);
+                    editor.commit();
+                    register(appLaunchResponseListener,parameters);
+                }else{
+                    //if the user is an already registered user return the cached registration response
+                    String registrationResponse = sharedpreferences.getString(userId,"");
+                    AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
+                    appLaunchResponse.setResponseText(registrationResponse);
+                    appLaunchResponseListener.onSuccess(appLaunchResponse);
+                }
             } else {
                 logger.error("AppLaunch:register() - Invoke initApp() before register");
                 throw new RuntimeException("AppLaunch:register() - Invoke initApp() before register or invalid parameters", null);
             }
-            //proceed to registration only if the user is a first time user
-            if(isFirstTimeUser){
-                ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID()+"/devices/"+ AppLaunchUtils.getDeviceId();
-                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
-                SharedPreferences.Editor editor = sharedpreferences.edit();
-                editor.putString(AppLaunchConstants.ANALYZER_URL,ANALYZER_URL);
-                editor.putString(AppLaunchConstants.APP_USER,userId);
-                editor.commit();
-                register(appLaunchResponseListener,parameters);
-            }else{
-                String registrationResponse = sharedpreferences.getString(AppLaunchConstants.REG_RESPONSE,"");
-                AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                appLaunchResponse.setResponseText(registrationResponse);
-                appLaunchResponseListener.onSuccess(appLaunchResponse);
-            }
-
         } catch (Exception e) {
             AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
             appLaunchFailResponse.setErrorMsg(e.getMessage());
@@ -318,7 +311,7 @@ public class AppLaunch {
     public void getActions(final AppLaunchActions appLaunchActions) {
       if(appLaunchActions!=null){
           if (null != appLaunchConfig && null != appLaunchConfig.getContext()) {
-              String actionsUrl = ANALYZER_URL + "/actions";
+              String actionsUrl = ANALYZER_URL + "/actions?deviceId="+ AppLaunchUtils.getDeviceId();
               Request getReq = new Request(actionsUrl, Request.GET);
               getReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
 
@@ -465,7 +458,7 @@ public class AppLaunch {
      * @param metrics
      */
     public void sendMetrics(ArrayList<String> metrics) {
-        String metricsUrl = ANALYZER_URL + "/events/metrics";
+        String metricsUrl = ANALYZER_URL + "/events/metrics?deviceId="+ AppLaunchUtils.getDeviceId();;
         try {
             JSONObject metricJson = AppLaunchUtils.getMetricJson();
             JSONArray jsonArray = new JSONArray();
@@ -806,8 +799,7 @@ public class AppLaunch {
                 appLaunchResponse.setResponseText(response.getResponseText());
                 if("initialize".equals(methodName) && sharedpreferences!=null){
                     SharedPreferences.Editor editor = sharedpreferences.edit();
-                    editor.putBoolean(AppLaunchConstants.FIRST_TIME_USER,false);
-                    editor.putString(AppLaunchConstants.REG_RESPONSE,response.getResponseText());
+                    editor.putString(appLaunchConfig.getUserID(),response.getResponseText());
                     editor.commit();
                 }
                 appLaunchResponseListener.onSuccess(appLaunchResponse);
@@ -906,7 +898,7 @@ public class AppLaunch {
         });
     }
 
-    public void getMessages(final Context context, final AppLaunchResponseListener appLaunchResponseListener){
+    private void getMessages(final Context context, final AppLaunchResponseListener appLaunchResponseListener){
 
         String messageUrl = ANALYZER_URL+"/actions/messages";
         Request getReq = new Request(messageUrl, Request.GET);
