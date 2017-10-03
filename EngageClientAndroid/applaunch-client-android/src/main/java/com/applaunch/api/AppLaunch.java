@@ -100,14 +100,22 @@ public class AppLaunch {
      */
     public void initApp(Application context,String region, String appGuid, String clientSecret){
         if (appGuid != null && context != null && clientSecret!=null && region!=null ) {
+            String baseUrl="";
+            if(region.equals(BMSClient.REGION_US_SOUTH)){
+                baseUrl = AppLaunchConstants.REGION_US_SOUTH;
+            }else if(region.equals("staging.ng.bluemix.net")){
+                baseUrl = AppLaunchConstants.REGION_US_SOUTH_STAGING;
+            }else if(region.equals("dev.ng.bluemix.net")){
+                baseUrl = AppLaunchConstants.REGION_US_SOUTH_DEV;
+            }
             this.appLaunchConfig = new AppLaunchConfig(context,region,appGuid,clientSecret);
             appContext = context;
             sharedpreferences = appLaunchConfig.getApplication().getSharedPreferences(APP_LAUNCH, Context.MODE_PRIVATE);
          //   isFirstTimeUser = sharedpreferences.getBoolean(AppLaunchConstants.FIRST_TIME_USER,true);
             BMSClient.getInstance().initialize(appLaunchConfig.getContext(), region);
             appLaunchProperties = AppLaunchProperties.getInstance(appLaunchConfig.getContext());
-            URL = appLaunchProperties.getProtocol() + "://" + appLaunchProperties.getHost() + ":" + appLaunchProperties.getPort() + appLaunchProperties.getServerContext();
-            ANALYZER_URL = appLaunchProperties.getAnalyzerProtocol() + "://" + appLaunchProperties.getAnalyzerServerHost() + ":" + appLaunchProperties.getAnalyzerServerPort() + appLaunchProperties.getAnalyzerServerContext();
+            URL = appLaunchProperties.getProtocol() + "://" +baseUrl + ":" + appLaunchProperties.getPort() + appLaunchProperties.getServerContext();
+            ANALYZER_URL = appLaunchProperties.getAnalyzerProtocol() + "://" + baseUrl + ":" + appLaunchProperties.getAnalyzerServerPort() + appLaunchProperties.getAnalyzerServerContext();
             ANALYZER_URL += appLaunchConfig.getApplicationId();
             String user = sharedpreferences.getString(AppLaunchConstants.APP_USER,null);
             if(user!=null){

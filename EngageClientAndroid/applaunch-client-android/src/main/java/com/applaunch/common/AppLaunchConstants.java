@@ -18,6 +18,11 @@ public class AppLaunchConstants {
     public static final String ANALYZER_SERVER_PORT = "analyzerServerport";
     public static final String ANALYZER_SERVER_CONTEXT = "analyzerServerContext";
 
+    //URL
+    public static final String REGION_US_SOUTH_STAGING="mobileservices-staging.us-south.containers.mybluemix.net";
+    public static final String REGION_US_SOUTH_DEV="mobileservices-dev.us-south.containers.mybluemix.net";
+    public static final String REGION_US_SOUTH="mobileservices.us-south.containers.mybluemix.net";
+
     //sharedpref keys
     //public static final String FIRST_TIME_USER = "isFirstTime";
     public static final String REG_RESPONSE = "regResponse";
