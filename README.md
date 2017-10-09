@@ -191,15 +191,12 @@ To send metrics to the server use the `AppLaunch.getInstance().sendMetrics();` a
 
 ## Samples and videos
 
-* For samples, visit - [Github Sample](https:)
+* For samples, visit - [Github Sample](https://github.com/ibm-bluemix-mobile-services/bms-samples-android-helloapplaunch)
 
-* For video tutorials, visit - [App Launch Service](https://)
 
 ### Learning More
 
 * Visit the **[Bluemix Developers Community](https://developer.ibm.com/bluemix/)**.
-
-* [Getting started with IBM MobileFirst Platform for iOS](https://www.ng.bluemix.net/docs/mobile/index.html)
 
 ### Connect with Bluemix
 
