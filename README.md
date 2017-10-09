@@ -29,7 +29,7 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
  * Android 4.0 or later
  * [Android Studio](https://developer.android.com/studio/index.html)
  * [Gradle](https://gradle.org/install)
- * [Android HelloAppLaunch sample app](https://github.ibm.com/Engage/bms-samples-android-helloengage)
+ * [Android HelloAppLaunch sample app](https://github.com/ibm-bluemix-mobile-services/bms-samples-android-helloapplaunch)
  * [BMSCore](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-core) SDKs installed by using 
   either Android Studio or Gradle
 
