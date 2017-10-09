@@ -25,8 +25,6 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 
 ## Prerequisites
 
-
- * [App Launch Android Client SDK package](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ibm.mobilefirstplatform.clientsdk.android%22)
  * Android API level 14 or later
  * Android 4.0 or later
  * [Android Studio](https://developer.android.com/studio/index.html)
