@@ -7,6 +7,10 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 
 ## Contents
 - [Setup App Launch Service](#setup-app-launch-service)
+	 - [Creating the service](#creating-the-service)
+	 - [Creating a feature](#creating-a-feature)
+	 - [Creating an audience](#creating-an-audience)
+	 - [Creating an engagement](#creating-an-engagement)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Initialize SDK](#initialize-sdk)
@@ -25,6 +29,12 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 ##Setup App Launch Service
 ### Creating the service
 ![Create service](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_service.gif)
+### Creating a feature
+![Create feature](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_feature.gif)
+### Creating an audience
+![Create audience](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_audience.gif)
+### Creating an engagement
+![Create engagement](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_engagement.gif)
 
 ## Prerequisites
 
