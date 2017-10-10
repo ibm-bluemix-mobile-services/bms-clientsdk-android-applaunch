@@ -6,7 +6,7 @@ The [Bluemix App Launch service](https://console.stage1.bluemix.net/catalog/serv
 Ensure that you go through [Bluemix App Launch service documentation](https://console-regional.ng.bluemix.net/docs/services/app-launch/index.html) before you start.
 
 ## Contents
-
+- [Setup App Launch Service](#setup-app-launch-service)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Initialize SDK](#initialize-sdk)
@@ -22,6 +22,9 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
     - [Send Metrics](#send-metrics)
 - [Samples and videos](#samples-and-videos)
 
+##Setup App Launch Service
+### Creating the service
+![Create service](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_service.gif)
 
 ## Prerequisites
 
