@@ -1,13 +1,9 @@
 IBM Bluemix App Launch Android SDK
 ==========================================
 
-[![Build Status](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push.svg?branch=master)](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push)
-[![Build Status](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push.svg?branch=development)](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-push)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5c49c09a1f9f45c99c39623f8033d1eb)](https://www.codacy.com/app/ibm-bluemix-mobile-services/bms-clientsdk-android-push?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ibm-bluemix-mobile-services/bms-clientsdk-android-push&amp;utm_campaign=Badge_Grade)
+The [Bluemix App Launch service](https://console.stage1.bluemix.net/catalog/services/app-launch) App Launch service on Bluemix helps in controlled reach of app features. It provides a unified service to customize and personalize your applications to different audience with just few clicks.
 
-The [Bluemix App Launch service](https://console.ng.bluemix.net/catalog/) App Launch service on Bluemix helps in controlled reach of app features. It provides a unified service to customize and personalize your applications to different audience with just few clicks.
-
-Ensure that you go through [Bluemix App Launch service documentation](https://console.ng.bluemix.net/docs/services/) before you start.
+Ensure that you go through [Bluemix App Launch service documentation](https://console-regional.ng.bluemix.net/docs/services/app-launch/index.html) before you start.
 
 ## Contents
 
@@ -29,13 +25,11 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 
 ## Prerequisites
 
-
- * [App Launch Android Client SDK package](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ibm.mobilefirstplatform.clientsdk.android%22)
  * Android API level 14 or later
  * Android 4.0 or later
  * [Android Studio](https://developer.android.com/studio/index.html)
  * [Gradle](https://gradle.org/install)
- * [Android HelloAppLaunch sample app](https://github.ibm.com/Engage/bms-samples-android-helloengage)
+ * [Android HelloAppLaunch sample app](https://github.com/ibm-bluemix-mobile-services/bms-samples-android-helloapplaunch)
  * [BMSCore](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-core) SDKs installed by using 
   either Android Studio or Gradle
 
@@ -197,15 +191,12 @@ To send metrics to the server use the `AppLaunch.getInstance().sendMetrics();` a
 
 ## Samples and videos
 
-* For samples, visit - [Github Sample](https:)
+* For samples, visit - [Github Sample](https://github.com/ibm-bluemix-mobile-services/bms-samples-android-helloapplaunch)
 
-* For video tutorials, visit - [App Launch Service](https://)
 
 ### Learning More
 
 * Visit the **[Bluemix Developers Community](https://developer.ibm.com/bluemix/)**.
-
-* [Getting started with IBM MobileFirst Platform for iOS](https://www.ng.bluemix.net/docs/mobile/index.html)
 
 ### Connect with Bluemix
 
