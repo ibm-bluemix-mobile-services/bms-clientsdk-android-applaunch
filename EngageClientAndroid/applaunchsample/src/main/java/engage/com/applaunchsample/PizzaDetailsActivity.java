@@ -28,7 +28,7 @@ public class PizzaDetailsActivity extends AppCompatActivity implements AppLaunch
             @Override
             public void onClick(View v) {
                 ArrayList<String> metrics = new ArrayList<String>();
-                metrics.add("_w7xos3fqh");
+                metrics.add("_7ybkgux2n");
                 AppLaunch.getInstance().sendMetrics(metrics);
             }
         });
@@ -39,8 +39,8 @@ public class PizzaDetailsActivity extends AppCompatActivity implements AppLaunch
     @Override
     public void onFeaturesReceived(String features) {
         try{
-            if(AppLaunch.getInstance().isFeatureEnabled("_intics0gg")){
-                String value = AppLaunch.getInstance().getPropertyOfFeature("_intics0gg","_4tganfvfg");
+            if(AppLaunch.getInstance().isFeatureEnabled("_pp236o2gj")){
+                String value = AppLaunch.getInstance().getPropertyOfFeature("_pp236o2gj","_1pgqug4y5");
                 if(Boolean.valueOf(value)){
                     runOnUiThread(new Runnable() {
                         @Override
