@@ -228,7 +228,7 @@ public class AppLaunch {
                 }
                 appLaunchConfig.setUserID(userId);
                 //proceed to registration only if the user is a new user
-                if(sharedpreferences.getString(AppLaunchConstants.APP_USER,null)==null){
+                if(sharedpreferences.getString(userId+"-"+appLaunchConfig.getBluemixRegion(),null)==null){
                     ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
                     AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
                     SharedPreferences.Editor editor = sharedpreferences.edit();
@@ -238,7 +238,7 @@ public class AppLaunch {
                     register(appLaunchResponseListener,parameters);
                 }else{
                     //if the user is an already registered user return the cached registration response
-                    String registrationResponse = sharedpreferences.getString(userId,"");
+                    String registrationResponse = sharedpreferences.getString(userId+"-"+appLaunchConfig.getBluemixRegion(),"");
                     AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
                     appLaunchResponse.setResponseText(registrationResponse);
                     appLaunchResponseListener.onSuccess(appLaunchResponse);
@@ -807,7 +807,7 @@ public class AppLaunch {
                 appLaunchResponse.setResponseText(response.getResponseText());
                 if("initialize".equals(methodName) && sharedpreferences!=null){
                     SharedPreferences.Editor editor = sharedpreferences.edit();
-                    editor.putString(appLaunchConfig.getUserID(),response.getResponseText());
+                    editor.putString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion(),response.getResponseText());
                     editor.commit();
                 }
                 appLaunchResponseListener.onSuccess(appLaunchResponse);
