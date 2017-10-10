@@ -28,7 +28,6 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 
 ##Setup App Launch Service
 ### Creating the service
-<gif-player src="https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_service.gif" play></gif-player>
 ![Create service](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_service.gif)
 ### Creating a feature
 ![Create feature](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_feature.gif)
