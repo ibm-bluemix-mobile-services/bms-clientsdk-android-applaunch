@@ -28,7 +28,7 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 
 ##Setup App Launch Service
 ### Creating the service
-![Create service](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_service.gif)
+![Create feature](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_service.gif)
 ### Creating a feature
 ![Create feature](https://github.com/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch/blob/development/Images/create_feature.gif)
 ### Creating an audience
@@ -57,7 +57,7 @@ Choose to integrate the App Launch Service Android Client SDK package using eith
 
 ### Include client App Launch SDK 
 
-Import `applaunch-client-android.aar` as a module into the project and Configure the app module `build.gradle` files.
+Import [applaunch-client-android.aar](https://github.com/sam-almighty/bms-clientsdk-android-applaunch/raw/development/dist/applaunch-client-android.aar) as a module into the project and Configure the app module `build.gradle` files.
 
 1. Add Bluemix App Launch Android SDK dependency and BMS Core dependency to your app module `build.gradle` file.
     
