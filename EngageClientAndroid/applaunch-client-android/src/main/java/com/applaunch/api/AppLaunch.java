@@ -356,13 +356,16 @@ public class AppLaunch {
 
 
     public boolean isFeatureEnabled(String featureCode) throws AppLaunchException{
-        if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)){
-            if (!featureList.isEmpty() && featureList.containsKey(featureCode)) {
-                return true;
+        if(null!=sharedpreferences ){
+            if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)){
+                if (!featureList.isEmpty() && featureList.containsKey(featureCode)) {
+                    return true;
+                }
+                return false;
             }
-            return false;
+            throw new AppLaunchException("Invoke getActions() api before isFeatureEnabled()");
         }
-         throw new AppLaunchException("Invoke getActions() api before isFeatureEnabled()");
+        throw new AppLaunchException("init() api should be invoked as the first call in the application.");
     }
 
     /**
@@ -372,32 +375,35 @@ public class AppLaunch {
      * @return
      */
     public String getPropertyOfFeature(String featureCode, String variableCode) throws AppLaunchException {
-        if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)) {
-            String returnValue = null;
-            if (featureList.containsKey(featureCode)) {
-                JSONObject featureObject = featureList.get(featureCode);
-                try {
-                    JSONArray variableArray = featureObject.getJSONArray("variables");
-                    for (int index = 0; index < variableArray.length(); index++) {
-                        try {
-                            JSONObject variableObject = (JSONObject) variableArray.get(index);
-                            if (variableObject.getString("code").equals(variableCode)) {
-                                returnValue = variableObject.getString("value");
-                                break;
+        if(null!=sharedpreferences ){
+            if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)) {
+                String returnValue = null;
+                if (featureList.containsKey(featureCode)) {
+                    JSONObject featureObject = featureList.get(featureCode);
+                    try {
+                        JSONArray variableArray = featureObject.getJSONArray("variables");
+                        for (int index = 0; index < variableArray.length(); index++) {
+                            try {
+                                JSONObject variableObject = (JSONObject) variableArray.get(index);
+                                if (variableObject.getString("code").equals(variableCode)) {
+                                    returnValue = variableObject.getString("value");
+                                    break;
+                                }
+                            } catch (JSONException ex) {
+                                continue;
                             }
-                        } catch (JSONException ex) {
-                            continue;
                         }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        returnValue = null;
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    returnValue = null;
                 }
+                return returnValue;
+            }else{
+                throw new AppLaunchException("Invoke getActions() api before getPropertyOfFeature()");
             }
-            return returnValue;
-        }else{
-            throw new AppLaunchException("Invoke getActions() api before getPropertyOfFeature()");
         }
+        throw new AppLaunchException("init() api should be invoked as the first call in the application.");
     }
 
     /**
