@@ -122,9 +122,8 @@ public class AppLaunch {
                 appLaunchConfig.setUserID(user);
             }
             if(appLaunchConfig.getUserID()!=null && appLaunchConfig.getUserID().length()>0){
-                ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
                 //override the default server url to send analytics information
-                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
+                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID();
             }
 
         }else{
@@ -229,10 +228,10 @@ public class AppLaunch {
                 appLaunchConfig.setUserID(userId);
                 //proceed to registration only if the user is a new user
                 if(sharedpreferences.getString(userId+"-"+appLaunchConfig.getBluemixRegion(),null)==null){
-                    ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
+                   // ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
                     AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
                     SharedPreferences.Editor editor = sharedpreferences.edit();
-                    editor.putString(AppLaunchConstants.ANALYZER_URL,ANALYZER_URL);
+                    editor.putString(ANALYZER_URL,ANALYZER_URL);
                     editor.putString(AppLaunchConstants.APP_USER,userId);
                     editor.commit();
                     register(appLaunchResponseListener,parameters);
@@ -319,7 +318,8 @@ public class AppLaunch {
     public void getActions(final AppLaunchActions appLaunchActions) {
       if(appLaunchActions!=null){
           if (null != appLaunchConfig && null != appLaunchConfig.getContext()) {
-              String actionsUrl = ANALYZER_URL + "/actions?deviceId="+ AppLaunchUtils.getDeviceId();
+
+              String actionsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID() + "/actions?deviceId="+ AppLaunchUtils.getDeviceId();
               Request getReq = new Request(actionsUrl, Request.GET);
               getReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
 
@@ -346,6 +346,7 @@ public class AppLaunch {
                   @Override
                   public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                     Log.d("getActions",response.getResponseText());
+                      appLaunchActions.onFeaturesReceived(response.getResponseText());
                   }
               });
           }
@@ -472,7 +473,7 @@ public class AppLaunch {
      * @param metrics
      */
     public void sendMetrics(ArrayList<String> metrics) {
-        String metricsUrl = ANALYZER_URL + "/events/metrics?deviceId="+ AppLaunchUtils.getDeviceId();;
+        String metricsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID()+ "/events/metrics?deviceId="+ AppLaunchUtils.getDeviceId();;
         try {
             JSONObject metricJson = AppLaunchUtils.getMetricJson();
             JSONArray jsonArray = new JSONArray();
