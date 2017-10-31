@@ -58,6 +58,17 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onSuccess(AppLaunchResponse appLaunchResponse) {
                 Log.d("HomeActivity","Init Successful - "+ appLaunchResponse.getResponseText());
+                AppLaunch.getInstance().getMessages(HomeActivity.this, new AppLaunchResponseListener() {
+                    @Override
+                    public void onSuccess(AppLaunchResponse appLaunchResponse) {
+
+                    }
+
+                    @Override
+                    public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+
+                    }
+                });
 
             }
 

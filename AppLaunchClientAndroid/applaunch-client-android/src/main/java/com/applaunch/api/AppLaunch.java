@@ -1,10 +1,10 @@
 package com.applaunch.api;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -122,9 +122,8 @@ public class AppLaunch {
                 appLaunchConfig.setUserID(user);
             }
             if(appLaunchConfig.getUserID()!=null && appLaunchConfig.getUserID().length()>0){
-                ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
                 //override the default server url to send analytics information
-                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
+                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID();
             }
 
         }else{
@@ -228,11 +227,11 @@ public class AppLaunch {
                 }
                 appLaunchConfig.setUserID(userId);
                 //proceed to registration only if the user is a new user
-                if(sharedpreferences.getString(userId+"-"+appLaunchConfig.getBluemixRegion(),null)==null){
-                    ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
+                if(sharedpreferences.getString(userId+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),null)==null){
+                   // ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
                     AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
                     SharedPreferences.Editor editor = sharedpreferences.edit();
-                    editor.putString(AppLaunchConstants.ANALYZER_URL,ANALYZER_URL);
+                    editor.putString(ANALYZER_URL,ANALYZER_URL);
                     editor.putString(AppLaunchConstants.APP_USER,userId);
                     editor.commit();
                     register(appLaunchResponseListener,parameters);
@@ -319,7 +318,8 @@ public class AppLaunch {
     public void getActions(final AppLaunchActions appLaunchActions) {
       if(appLaunchActions!=null){
           if (null != appLaunchConfig && null != appLaunchConfig.getContext()) {
-              String actionsUrl = ANALYZER_URL + "/actions?deviceId="+ AppLaunchUtils.getDeviceId();
+
+              String actionsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID() + "/actions?deviceId="+ AppLaunchUtils.getDeviceId();
               Request getReq = new Request(actionsUrl, Request.GET);
               getReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
 
@@ -345,7 +345,13 @@ public class AppLaunch {
 
                   @Override
                   public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                    Log.d("getActions",response.getResponseText());
+                      if(response!=null){
+                          Log.d("getActions",response.getResponseText());
+                          appLaunchActions.onFeaturesReceived(response.getResponseText());
+                      }else{
+                          appLaunchActions.onFeaturesReceived("Error fetching actions");
+                      }
+
                   }
               });
           }
@@ -353,16 +359,24 @@ public class AppLaunch {
       }
 
 
-
-
+    /**
+     * Checks to see if the feature code specified is present
+     * returns true if the feature is present else false
+     * @param featureCode
+     * @return
+     * @throws AppLaunchException
+     */
     public boolean isFeatureEnabled(String featureCode) throws AppLaunchException{
-        if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)){
-            if (!featureList.isEmpty() && featureList.containsKey(featureCode)) {
-                return true;
+        if(null!=sharedpreferences ){
+            if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)){
+                if (!featureList.isEmpty() && featureList.containsKey(featureCode)) {
+                    return true;
+                }
+                return false;
             }
-            return false;
+            throw new AppLaunchException("Invoke getActions() api before isFeatureEnabled()");
         }
-         throw new AppLaunchException("Invoke getActions() api before isFeatureEnabled()");
+        throw new AppLaunchException("init() api should be invoked as the first call in the application.");
     }
 
     /**
@@ -372,32 +386,35 @@ public class AppLaunch {
      * @return
      */
     public String getPropertyOfFeature(String featureCode, String variableCode) throws AppLaunchException {
-        if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)) {
-            String returnValue = null;
-            if (featureList.containsKey(featureCode)) {
-                JSONObject featureObject = featureList.get(featureCode);
-                try {
-                    JSONArray variableArray = featureObject.getJSONArray("variables");
-                    for (int index = 0; index < variableArray.length(); index++) {
-                        try {
-                            JSONObject variableObject = (JSONObject) variableArray.get(index);
-                            if (variableObject.getString("code").equals(variableCode)) {
-                                returnValue = variableObject.getString("value");
-                                break;
+        if(null!=sharedpreferences ){
+            if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)) {
+                String returnValue = null;
+                if (featureList.containsKey(featureCode)) {
+                    JSONObject featureObject = featureList.get(featureCode);
+                    try {
+                        JSONArray variableArray = featureObject.getJSONArray("variables");
+                        for (int index = 0; index < variableArray.length(); index++) {
+                            try {
+                                JSONObject variableObject = (JSONObject) variableArray.get(index);
+                                if (variableObject.getString("code").equals(variableCode)) {
+                                    returnValue = variableObject.getString("value");
+                                    break;
+                                }
+                            } catch (JSONException ex) {
+                                continue;
                             }
-                        } catch (JSONException ex) {
-                            continue;
                         }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        returnValue = null;
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    returnValue = null;
                 }
+                return returnValue;
+            }else{
+                throw new AppLaunchException("Invoke getActions() api before getPropertyOfFeature()");
             }
-            return returnValue;
-        }else{
-            throw new AppLaunchException("Invoke getActions() api before getPropertyOfFeature()");
         }
+        throw new AppLaunchException("init() api should be invoked as the first call in the application.");
     }
 
     /**
@@ -466,7 +483,7 @@ public class AppLaunch {
      * @param metrics
      */
     public void sendMetrics(ArrayList<String> metrics) {
-        String metricsUrl = ANALYZER_URL + "/events/metrics?deviceId="+ AppLaunchUtils.getDeviceId();;
+        String metricsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID()+ "/events/metrics?deviceId="+ AppLaunchUtils.getDeviceId();
         try {
             JSONObject metricJson = AppLaunchUtils.getMetricJson();
             JSONArray jsonArray = new JSONArray();
@@ -608,97 +625,6 @@ public class AppLaunch {
     }
 
 
-
-
-    /**
-     * @param appLaunchConfig
-     * @param appLaunchResponseListener
-     */
-    private void getThemes(AppLaunchConfig appLaunchConfig, final AppLaunchResponseListener appLaunchResponseListener) {
-        try {
-            if (null != appLaunchConfig && null != appLaunchConfig.getContext() && null != appLaunchResponseListener) {
-                Request getReq = new Request(URL + "captivateengine/features", Request.GET);
-
-                getReq.send(appContext, new ResponseListener() {
-                    @Override
-                    public void onSuccess(Response response) {
-                        AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                        appLaunchResponseListener.onSuccess(appLaunchResponse);
-                    }
-
-                    @Override
-                    public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                        AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                        appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                    }
-                });
-
-            }
-        } catch (Exception ex) {
-
-        }
-    }
-
-
-    /**
-     * @param appLaunchConfig
-     * @param appLaunchResponseListener
-     */
-    private void getCustomizations(AppLaunchConfig appLaunchConfig, final AppLaunchResponseListener appLaunchResponseListener) {
-        try {
-            if (null != appLaunchConfig && null != appLaunchConfig.getContext() && null != appLaunchResponseListener) {
-                Request getReq = new Request(URL + "captivateengine/features", Request.GET);
-
-                getReq.send(appContext, new ResponseListener() {
-                    @Override
-                    public void onSuccess(Response response) {
-                        AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                        appLaunchResponseListener.onSuccess(appLaunchResponse);
-                    }
-
-                    @Override
-                    public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                        AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                        appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                    }
-                });
-
-            }
-        } catch (Exception ex) {
-
-        }
-    }
-
-    /**
-     * @param appLaunchConfig
-     * @param appLaunchResponseListener
-     */
-    private void getMessages(AppLaunchConfig appLaunchConfig, final AppLaunchResponseListener appLaunchResponseListener) {
-        try {
-            if (null != appLaunchConfig && null != appLaunchConfig.getContext() && null != appLaunchResponseListener) {
-                Request getReq = new Request(URL + "captivateengine/features", Request.GET);
-
-                getReq.send(appContext, new ResponseListener() {
-                    @Override
-                    public void onSuccess(Response response) {
-                        AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                        appLaunchResponseListener.onSuccess(appLaunchResponse);
-                    }
-
-                    @Override
-                    public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                        AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                        appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                    }
-                });
-
-            }
-        } catch (Exception ex) {
-
-        }
-    }
-
-
     private String getDeviceId() {
         return deviceId;
     }
@@ -707,81 +633,6 @@ public class AppLaunch {
         return userLocale;
     }
 
-
-    /**
-     * @param key
-     * @param value
-     * @param appLaunchResponseListener
-     */
-    private void updateUser(String key, int value, final AppLaunchResponseListener appLaunchResponseListener) {
-        if (null != key && null != appLaunchResponseListener) {
-            try {
-                JSONObject jsonObject = AppLaunchUtils.getInitJson(appLaunchConfig.getApplication());
-                jsonObject.put(key, value);
-                Request getReq = new Request(URL + "captivateengine/features", Request.GET);
-
-                getReq.send(appContext, new ResponseListener() {
-                    @Override
-                    public void onSuccess(Response response) {
-                        AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                        appLaunchResponseListener.onSuccess(appLaunchResponse);
-                    }
-
-                    @Override
-                    public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                        AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                        appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                    }
-                });
-            } catch (JSONException e) {
-                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                e.printStackTrace();
-            }
-        } else {
-            AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-            appLaunchResponseListener.onFailure(appLaunchFailResponse);
-        }
-
-    }
-
-
-    /**
-     * @param key
-     * @param value
-     * @param appLaunchResponseListener
-     */
-    private void updateUser(String key, boolean value, final AppLaunchResponseListener appLaunchResponseListener) {
-        if (null != key && null != appLaunchResponseListener) {
-            try {
-                JSONObject jsonObject = AppLaunchUtils.getInitJson(appLaunchConfig.getApplication());
-                jsonObject.put(key, value);
-                Request getReq = new Request(URL + "captivateengine/features", Request.GET);
-
-                getReq.send(appContext, new ResponseListener() {
-                    @Override
-                    public void onSuccess(Response response) {
-                        AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                        appLaunchResponseListener.onSuccess(appLaunchResponse);
-                    }
-
-                    @Override
-                    public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                        AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                        appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                    }
-                });
-            } catch (JSONException e) {
-                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                e.printStackTrace();
-            }
-        } else {
-            AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-            appLaunchResponseListener.onFailure(appLaunchFailResponse);
-        }
-
-    }
 
 
     private void sendPostRequest(final String methodName, String url, JSONObject body, final AppLaunchResponseListener appLaunchResponseListener) {
@@ -807,7 +658,7 @@ public class AppLaunch {
                 appLaunchResponse.setResponseText(response.getResponseText());
                 if("initialize".equals(methodName) && sharedpreferences!=null){
                     SharedPreferences.Editor editor = sharedpreferences.edit();
-                    editor.putString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion(),response.getResponseText());
+                    editor.putString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
                     editor.commit();
                 }
                 appLaunchResponseListener.onSuccess(appLaunchResponse);
@@ -835,81 +686,17 @@ public class AppLaunch {
         });
     }
 
-    // ********* //
 
+    /**
+     * Get messages for the application
+     * @param context
+     * @param appLaunchResponseListener
+     */
+    public void getMessages(final Context context, final AppLaunchResponseListener appLaunchResponseListener){
 
-    public void getFeatureToggle(final AppLaunchResponseListener responseListener) {
-
-        // use bms core functionality to connect to db and fetch exiting on-boarding msgs for this user, if any...
-
-        Request getReq = new Request(URL + "captivateengine/features", Request.GET);
-        getReq.setQueryParameter("OSType", "android");
-        getReq.setQueryParameter("locale", userLocale);
-        getReq.setQueryParameter("serviceInstanceId", appGUID);
-        getReq.setQueryParameter("deviceId", deviceId);
-
-        getReq.send(appContext, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                //  responseListener.onSuccess(response.getResponseText());
-            }
-
-            @Override
-            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                // responseListener.onFailure(response.getResponseText());
-            }
-        });
-
-    }
-
-    public void getInAppMsgs(boolean autoRenderUI, final AppLaunchResponseListener responseListener) {
-
-        // use bms core functionality to connect to db and fetch exiting in-app msgs for this user, if any...
-
-        Request getReq = new Request(URL + "captivateengine/inappmsg", Request.GET);
-        getReq.setQueryParameter("OSType", userOSType);
-        getReq.setQueryParameter("locale", userLocale);
-        getReq.setQueryParameter("serviceInstanceId", appGUID);
-        getReq.setQueryParameter("deviceId", deviceId);
-        getReq.send(appContext, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                // responseListener.onSuccess(response.getResponseText());
-            }
-
-            @Override
-            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                //  responseListener.onFailure(response.getResponseText());
-            }
-        });
-    }
-
-    public void getAppTheme(final AppLaunchResponseListener responseListener) {
-
-        // use bms core functionality to connect to db and fetch exiting push-notification msgs for this user, if any...
-
-        Request getReq = new Request(URL + "captivateengine/apptheme", Request.GET);
-        getReq.setQueryParameter("OSType", userOSType);
-        getReq.setQueryParameter("locale", userLocale);
-        getReq.setQueryParameter("serviceInstanceId", appGUID);
-        getReq.setQueryParameter("deviceId", deviceId);
-        getReq.send(appContext, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                //   responseListener.onSuccess(response.getResponseText());
-            }
-
-            @Override
-            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                //   responseListener.onFailure(response.getResponseText());
-            }
-        });
-    }
-
-    private void getMessages(final Context context, final AppLaunchResponseListener appLaunchResponseListener){
-
-        String messageUrl = ANALYZER_URL+"/actions/messages";
+        String messageUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID()+"/actions/messages?deviceId="+ AppLaunchUtils.getDeviceId();
         Request getReq = new Request(messageUrl, Request.GET);
+        getReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
         getReq.send(appContext, new ResponseListener() {
             @Override
             public void onSuccess(Response response) {
@@ -959,7 +746,8 @@ public class AppLaunch {
                                 "  \"permissions\": [],\n" +
                                 "  \"carousel\": []\n" +
                                 "}";
-                        JSONObject messageJson = new JSONObject(response.getResponseText());
+                   //     JSONObject messageJson = new JSONObject(response.getResponseText());
+                        JSONObject messageJson = new JSONObject(jsonResponse);
                         processInAppMessages(context,messageJson);
                     }catch (Exception ex){
                         AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
