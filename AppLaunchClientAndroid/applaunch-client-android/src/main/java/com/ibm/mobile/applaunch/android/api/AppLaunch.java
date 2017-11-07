@@ -920,7 +920,7 @@ public class AppLaunch {
         dialog.setView(dialogLayout);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         ImageView image = (ImageView) dialogLayout.findViewById(R.id.goProDialogImage);
-        Picasso.with(context).load(messageData.getImageUrl()).placeholder(R.drawable.placeholder_image).into(image);
+        Picasso.with().load(messageData.getImageUrl()).placeholder(R.drawable.placeholder_image).into(image);
         TextView titleView = (TextView) dialogLayout.findViewById(R.id.title);
         titleView.setText(messageData.getTitle());
         TextView subTitleView = (TextView) dialogLayout.findViewById(R.id.subtitle);
