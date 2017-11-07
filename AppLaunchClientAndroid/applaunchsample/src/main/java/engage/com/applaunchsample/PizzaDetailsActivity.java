@@ -5,8 +5,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
-import com.applaunch.api.AppLaunch;
-import com.applaunch.api.AppLaunchActions;
+import com.ibm.mobile.applaunch.android.api.AppLaunch;
+import com.ibm.mobile.applaunch.android.api.AppLaunchActions;
 
 import java.util.ArrayList;
 

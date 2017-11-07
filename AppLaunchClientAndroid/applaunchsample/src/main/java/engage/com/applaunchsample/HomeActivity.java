@@ -8,11 +8,11 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.applaunch.AppLaunchFailResponse;
-import com.applaunch.AppLaunchResponse;
-import com.applaunch.AppLaunchResponseListener;
-import com.applaunch.api.AppLaunch;
-import com.applaunch.api.AppLaunchParameters;
+import com.ibm.mobile.applaunch.android.AppLaunchFailResponse;
+import com.ibm.mobile.applaunch.android.AppLaunchResponse;
+import com.ibm.mobile.applaunch.android.AppLaunchResponseListener;
+import com.ibm.mobile.applaunch.android.api.AppLaunch;
+import com.ibm.mobile.applaunch.android.api.AppLaunchParameters;
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.BMSClient;
 
 public class HomeActivity extends AppCompatActivity {
@@ -58,17 +58,17 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onSuccess(AppLaunchResponse appLaunchResponse) {
                 Log.d("HomeActivity","Init Successful - "+ appLaunchResponse.getResponseText());
-                AppLaunch.getInstance().getMessages(HomeActivity.this, new AppLaunchResponseListener() {
-                    @Override
-                    public void onSuccess(AppLaunchResponse appLaunchResponse) {
-
-                    }
-
-                    @Override
-                    public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
-
-                    }
-                });
+//                AppLaunch.getInstance().getMessages(HomeActivity.this, new AppLaunchResponseListener() {
+//                    @Override
+//                    public void onSuccess(AppLaunchResponse appLaunchResponse) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+//
+//                    }
+//                });
 
             }
 
