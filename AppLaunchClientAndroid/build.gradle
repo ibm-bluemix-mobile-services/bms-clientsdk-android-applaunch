@@ -12,34 +12,9 @@ buildscript {
     }
 }
 
-//plugins {
-//    id "org.sonarqube" version "2.0.1"
-//}
-//
-//sonarqube {
-//    properties {
-//        property "sonar.projectName", "bms-clientsdk-android-push"
-//        property "sonar.projectKey", "ibm-bluemix-mobile-services:bms-clientsdk-android-push"
-//        property "sonar.projectVersion", "1.0"
-//    }
-//}
-//
-//subprojects {
-//    sonarqube {
-//        properties {
-//            property "sonar.sources", "src"
-//        }
-//    }
-//}
-
-
 allprojects {
     repositories {
         jcenter()
-        maven {
-            url 'https://oss.sonatype.org/content/repositories/snapshots/'
-           // url 'http://repo.maven.apache.org/maven2'
-        }
     }
 }
 
