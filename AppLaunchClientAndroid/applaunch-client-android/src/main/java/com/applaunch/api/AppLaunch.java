@@ -77,11 +77,14 @@ public class AppLaunch {
 
     private static Context appContext = null;
 
+    private ArrayList<MessageData> messageList;
+
     private static AppLaunch thisInstance = null;
 
     private AppLaunch() {
         super();
         featureList = new HashMap<>();
+        messageList = new ArrayList<>();
     }
 
     public synchronized static AppLaunch getInstance() {
@@ -336,6 +339,8 @@ public class AppLaunch {
                               JSONArray featuresArray =  actionsObject.getJSONArray("features");
                               //process features
                               processFeatures(featuresArray);
+                              JSONObject messageObject = actionsObject.getJSONObject("messages");
+                              processInAppMessages(messageObject);
                               appLaunchActions.onFeaturesReceived(featuresArray.toString());
                           } catch (JSONException e) {
                               e.printStackTrace();
@@ -692,7 +697,7 @@ public class AppLaunch {
      * @param context
      * @param appLaunchResponseListener
      */
-    public void getMessages(final Context context, final AppLaunchResponseListener appLaunchResponseListener){
+    private void getMessages(final Context context, final AppLaunchResponseListener appLaunchResponseListener){
 
         String messageUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID()+"/actions/messages?deviceId="+ AppLaunchUtils.getDeviceId();
         Request getReq = new Request(messageUrl, Request.GET);
@@ -776,6 +781,52 @@ public class AppLaunch {
     }
 
 
+    private void processInAppMessages(JSONObject messageJson){
+        if(messageJson!=null) {
+            try {
+                JSONArray inAppMsgList = messageJson.getJSONArray("inApp");
+                if (null != inAppMsgList && inAppMsgList.length() > 0) {
+                    for (int inappIndex = 0; inappIndex < inAppMsgList.length(); inappIndex++) {
+                        JSONObject inappMessage = inAppMsgList.getJSONObject(inappIndex);
+                        String layout = inappMessage.getString("layout");
+                        if (MessageTypes.BANNER.equals(layout)) {
+                            final MessageData messageData = new MessageData(MessageTypes.BANNER);
+                            messageData.setTitle(inappMessage.getString("title"));
+                            messageData.setSubTitle(inappMessage.getString("subtitle"));
+                            messageData.setImageUrl(inappMessage.getString("imageUrl"));
+                            //process the buttons
+                            processButtons(messageData,inappMessage);
+                            messageList.add(messageData);
+                        } else if (MessageTypes.TOP_SLICE.equals(layout)) {
+
+                        } else if (MessageTypes.BOTTOM_PANEL.equals(layout)) {
+
+                        }
+                    }
+                }
+            } catch (JSONException e) {
+                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
+                appLaunchFailResponse.setErrorMsg("Error parsing response: " + e.getMessage());
+                //  engageResponseListener.onFailure(engageFailResponse);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void displayInAppMessages(final Context context){
+        if(context!=null){
+            ((Activity)context).runOnUiThread(new Runnable()
+            {
+                public void run()
+                {
+                    for (MessageData messageData: messageList) {
+                        displayBannerDialog(context,messageData);
+                    }
+
+                }
+            });
+        }
+    }
 
     private void processInAppMessages(final Context context,JSONObject messageJson){
         if(messageJson!=null) {
