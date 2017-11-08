@@ -47,19 +47,24 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
   either Android Studio or Gradle
 
 ## Installation
-
-Choose to integrate the App Launch Service Android Client SDK package using either of the following options:
-
-- Download and import the package to your Android Studio project
-
 ## Initialize SDK
 
 
 ### Include client App Launch SDK 
 
-Import [applaunch-client-android.aar](https://github.com/sam-almighty/bms-clientsdk-android-applaunch/raw/development/dist/applaunch-client-android.aar) as a module into the project and Configure the app module `build.gradle` files.
+To use the Bluemix App Launch SDK include the following:
 
-1. Add Bluemix App Launch Android SDK dependency and BMS Core dependency to your app module `build.gradle` file.
+1. In the projects `build.gradle` file include:
+	```
+	allprojects {
+	    repositories {
+		jcenter()
+		maven { url 'https://jitpack.io' }
+	    }
+	}
+	```
+
+2. Add Bluemix App Launch Android SDK dependency and BMS Core dependency to your app module `build.gradle` file.
     
     ```
     dependencies {
@@ -69,7 +74,7 @@ Import [applaunch-client-android.aar](https://github.com/sam-almighty/bms-client
         .......
     }
     ```
-2. Configure the `AndroidManifest.xml` file. Refer the [example here](https://github.ibm.com/Engage/bms-samples-android-helloengage/blob/master/PizzaDelivery/app/src/main/AndroidManifest.xml). Add the following permissions inside application's `AndroidManifest.xml` file. 
+3. Configure the `AndroidManifest.xml` file. Refer the [example here](https://github.ibm.com/Engage/bms-samples-android-helloengage/blob/master/PizzaDelivery/app/src/main/AndroidManifest.xml). Add the following permissions inside application's `AndroidManifest.xml` file. 
 
      ```
      <uses-permission android:name="android.permission.INTERNET"/>
