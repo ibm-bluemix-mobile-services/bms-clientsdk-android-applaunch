@@ -214,7 +214,10 @@ Use the ` AppLaunch.getInstance().isFeatureEnabled()` API to check if a particul
 ### Get variable for feature
 Use the `AppLaunch.getInstance().getVariableForFeature()` to fetch the variable corresponding to a feature
 
-    AppLaunch.getInstance().getVariableForFeature("featurecode","variablecode");
+`AppLaunch.getInstance().getVariableForFeature("featurecode","variablecode");`
+`AppLaunch.getInstance().getStringVariableForFeature("featurecode","variablecode");`
+`AppLaunch.getInstance().getIntVariableForFeature("featurecode","variablecode");`
+`AppLaunch.getInstance().getBooleanVariableForFeature("featurecode","variablecode");`
     
 
 This api returns the varaible corresponding to the variable code for a particular feature.
