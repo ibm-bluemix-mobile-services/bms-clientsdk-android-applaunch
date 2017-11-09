@@ -1,4 +1,8 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group='com.ibm.mobile.applaunch'
+
 
 android {
     compileSdkVersion 25

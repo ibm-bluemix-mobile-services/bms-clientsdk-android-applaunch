@@ -15,6 +15,7 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 - [Installation](#installation)
 - [Initialize SDK](#initialize-sdk)
     - [Include client App Launch SDK](#include-client-app-launch-sdk)
+    - [App Launch Config](#config-app-launch-parameters)
     - [Initialize](#initialize) 
     - [Register](#register) 
     - [Update User](#update-user)   
@@ -47,35 +48,63 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
   either Android Studio or Gradle
 
 ## Installation
-
-Choose to integrate the App Launch Service Android Client SDK package using either of the following options:
-
-- Download and import the package to your Android Studio project
-
 ## Initialize SDK
 
 
 ### Include client App Launch SDK 
 
-Import [applaunch-client-android.aar](https://github.com/sam-almighty/bms-clientsdk-android-applaunch/raw/development/dist/applaunch-client-android.aar) as a module into the project and Configure the app module `build.gradle` files.
+To use the Bluemix App Launch SDK include the following:
 
-1. Add Bluemix App Launch Android SDK dependency and BMS Core dependency to your app module `build.gradle` file.
+1. In the projects `build.gradle` file include:
+	```
+	allprojects {
+	    repositories {
+		jcenter()
+		maven { url 'https://jitpack.io' }
+	    }
+	}
+	```
+
+2. Add Bluemix App Launch Android SDK dependency and BMS Core dependency to your app module `build.gradle` file.
     
     ```
     dependencies {
         ........
-        compile project(':applaunch-client-android')
-         compile 'com.ibm.mobilefirstplatform.clientsdk.android:core:[2.0.0,3.0.0)'
+        compile 'com.github.ibm-bluemix-mobile-services:bms-clientsdk-android-applaunch:0.0.1'
+        compile 'com.ibm.mobilefirstplatform.clientsdk.android:core:[2.0.0,3.0.0)'
         .......
     }
     ```
-2. Configure the `AndroidManifest.xml` file. Refer the [example here](https://github.ibm.com/Engage/bms-samples-android-helloengage/blob/master/PizzaDelivery/app/src/main/AndroidManifest.xml). Add the following permissions inside application's `AndroidManifest.xml` file. 
+3. Configure the `AndroidManifest.xml` file. Refer the [example here](https://github.ibm.com/Engage/bms-samples-android-helloengage/blob/master/PizzaDelivery/app/src/main/AndroidManifest.xml). Add the following permissions inside application's `AndroidManifest.xml` file. 
 
      ```
      <uses-permission android:name="android.permission.INTERNET"/>
      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
      <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
      ```
+### App Launch Config
+To configure the applications fetch behaviour include the following parameters in applaunchconfig.properties file.
+```
+applaunchttl=Provide the time to live for the features in seconds
+fetchpolicybackground=true if the feature fetch should be performed in the background else false
+```
+**Note: This file should be place in the assets folder of the Andriod application.**    
+
+If `fetchpolicybackground` is set to true include the following lines in your applications `AndroidManifest.xml` to allow the sdk to fetch features in the background based on the `applaunchttl` time period provided.
+
+```
+<receiver
+    android:name="com.ibm.mobile.applaunch.android.actions.ActionsFetchAlarmReceiver"
+    android:process=":remote" >
+</receiver>
+```
+
+```
+<service
+    android:name="com.ibm.mobile.applaunch.android.actions.ActionsFetchService"
+    android:exported="false" /> 
+```
+     
 ### Initialize
 A common place to put the initialization code is the`onCreate()`method of the `main activity` in your Android application: 
 
@@ -118,17 +147,17 @@ The ```AppLaunchParameters``` can be used to pass any optional custom attributes
 
 Register users can also be invoked in the following ways:
 
-```registerUser(String userId, final AppLaunchResponseListener appLaunchResponseListener)```
+`registerUser(String userId, final AppLaunchResponseListener appLaunchResponseListener)`
 
-```registerUser(String userId)```
+`registerUser(String userId)`
 
-```registerUser(String userId,AppLaunchParameters parameters)```
+`registerUser(String userId,AppLaunchParameters parameters)`
 
-```registerUser(String userId,String key,String value)```
+`registerUser(String userId,String key,String value)`
 
-```registerUser(String userId,String key,String value,AppLaunchResponseListener appLaunchResponseListener)```
+`registerUser(String userId,String key,String value,AppLaunchResponseListener appLaunchResponseListener)`
 
-```registerUser(String userId,AppLaunchParameters parameters,AppLaunchResponseListener appLaunchResponseListener)```
+`registerUser(String userId,AppLaunchParameters parameters,AppLaunchResponseListener appLaunchResponseListener)`
 
 **Note: To update user details invoke the updateUser() api**
 
@@ -155,9 +184,9 @@ The ```AppLaunchParameters``` can be used to pass any optional custom attributes
 
 Update user can also be invoked in the following ways:
 
-```updateUser(String key,String value)```
+`updateUser(String key,String value)`
 
-```updateUser(String key,String value, final AppLaunchResponseListener appLaunchResponseListener)```
+`updateUser(String key,String value, final AppLaunchResponseListener appLaunchResponseListener)`
 
 
 ## Actions
@@ -185,7 +214,10 @@ Use the ` AppLaunch.getInstance().isFeatureEnabled()` API to check if a particul
 ### Get variable for feature
 Use the `AppLaunch.getInstance().getVariableForFeature()` to fetch the variable corresponding to a feature
 
-    AppLaunch.getInstance().getVariableForFeature("featurecode","variablecode");
+`AppLaunch.getInstance().getVariableForFeature("featurecode","variablecode");`
+`AppLaunch.getInstance().getStringVariableForFeature("featurecode","variablecode");`
+`AppLaunch.getInstance().getIntVariableForFeature("featurecode","variablecode");`
+`AppLaunch.getInstance().getBooleanVariableForFeature("featurecode","variablecode");`
     
 
 This api returns the varaible corresponding to the variable code for a particular feature.
