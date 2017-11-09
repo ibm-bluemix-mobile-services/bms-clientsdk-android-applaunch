@@ -92,14 +92,18 @@ fetchpolicybackground=true if the feature fetch should be performed in the backg
 
 If `fetchpolicybackground` is set to true include the following lines in your applications `AndroidManifest.xml` to allow the sdk to fetch features in the background based on the `applaunchttl` time period provided.
 
-```<receiver
+```
+<receiver
     android:name="com.ibm.mobile.applaunch.android.actions.ActionsFetchAlarmReceiver"
     android:process=":remote" >
-</receiver>```
+</receiver>
+```
 
-```<service
+```
+<service
     android:name="com.ibm.mobile.applaunch.android.actions.ActionsFetchService"
-    android:exported="false" /> ```
+    android:exported="false" /> 
+```
      
 ### Initialize
 A common place to put the initialization code is the`onCreate()`method of the `main activity` in your Android application: 
@@ -143,17 +147,17 @@ The ```AppLaunchParameters``` can be used to pass any optional custom attributes
 
 Register users can also be invoked in the following ways:
 
-```registerUser(String userId, final AppLaunchResponseListener appLaunchResponseListener)```
+`registerUser(String userId, final AppLaunchResponseListener appLaunchResponseListener)`
 
-```registerUser(String userId)```
+`registerUser(String userId)`
 
-```registerUser(String userId,AppLaunchParameters parameters)```
+`registerUser(String userId,AppLaunchParameters parameters)`
 
-```registerUser(String userId,String key,String value)```
+`registerUser(String userId,String key,String value)`
 
-```registerUser(String userId,String key,String value,AppLaunchResponseListener appLaunchResponseListener)```
+`registerUser(String userId,String key,String value,AppLaunchResponseListener appLaunchResponseListener)`
 
-```registerUser(String userId,AppLaunchParameters parameters,AppLaunchResponseListener appLaunchResponseListener)```
+`registerUser(String userId,AppLaunchParameters parameters,AppLaunchResponseListener appLaunchResponseListener)`
 
 **Note: To update user details invoke the updateUser() api**
 
@@ -180,9 +184,9 @@ The ```AppLaunchParameters``` can be used to pass any optional custom attributes
 
 Update user can also be invoked in the following ways:
 
-```updateUser(String key,String value)```
+`updateUser(String key,String value)`
 
-```updateUser(String key,String value, final AppLaunchResponseListener appLaunchResponseListener)```
+`updateUser(String key,String value, final AppLaunchResponseListener appLaunchResponseListener)`
 
 
 ## Actions
