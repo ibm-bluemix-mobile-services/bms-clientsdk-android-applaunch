@@ -15,6 +15,7 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 - [Installation](#installation)
 - [Initialize SDK](#initialize-sdk)
     - [Include client App Launch SDK](#include-client-app-launch-sdk)
+    - [App Launch Config](#config-app-launch-parameters)
     - [Initialize](#initialize) 
     - [Register](#register) 
     - [Update User](#update-user)   
@@ -81,6 +82,25 @@ To use the Bluemix App Launch SDK include the following:
      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
      <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
      ```
+### App Launch Config
+To configure the applications fetch behaviour include the following parameters in applaunchconfig.properties file.
+```
+applaunchttl=Provide the time to live for the features in seconds
+fetchpolicybackground=true if the feature fetch should be performed in the background else false
+```
+**Note: This file should be place in the assets folder of the Andriod application.**    
+
+If `fetchpolicybackground` is set to true include the following lines in your applications `AndroidManifest.xml` to allow the sdk to fetch features in the background based on the `applaunchttl` time period provided.
+
+```<receiver
+    android:name="com.ibm.mobile.applaunch.android.actions.ActionsFetchAlarmReceiver"
+    android:process=":remote" >
+</receiver>```
+
+```<service
+    android:name="com.ibm.mobile.applaunch.android.actions.ActionsFetchService"
+    android:exported="false" /> ```
+     
 ### Initialize
 A common place to put the initialization code is the`onCreate()`method of the `main activity` in your Android application: 
 
