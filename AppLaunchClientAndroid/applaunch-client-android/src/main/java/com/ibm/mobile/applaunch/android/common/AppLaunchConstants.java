@@ -8,11 +8,11 @@ package com.ibm.mobile.applaunch.android.common;
 public class AppLaunchConstants {
 
     public static final String VERSION = "version";
-    public static final String ENGAGE_CLIENT_PROPS_NAME = "engageclient.properties";
-    public static final String ENGAGE_SERVER_HOST = "engageServerHost";
-    public static final String ENGAGE_SERVER_PROTOCOL = "engageServerProtocol";
-    public static final String ENGAGE_SERVER_PORT = "engageServerPort";
-    public static final String ENGAGE_SERVER_CONTEXT = "engageServerContext";
+    public static final String APP_LAUNCH_CLIENT_PROPS_NAME = "applaunchclient.properties";
+    public static final String APP_LAUNCH_SERVER_HOST = "engageServerHost";
+    public static final String APP_LAUNCH_SERVER_PROTOCOL = "engageServerProtocol";
+    public static final String APP_LAUNCH_SERVER_PORT = "engageServerPort";
+    public static final String APP_LAUNCH_SERVER_CONTEXT = "engageServerContext";
     public static final String ANALYZER_SERVER_HOST = "analyzerServerHost";
     public static final String ANALYZER_SERVER_PROTOCOL = "analyzerServerprotocol";
     public static final String ANALYZER_SERVER_PORT = "analyzerServerport";

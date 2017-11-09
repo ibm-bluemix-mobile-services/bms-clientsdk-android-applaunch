@@ -26,22 +26,22 @@ public class AppLaunchProperties {
 
         if (!isBOMPresent(context)) {
             try {
-                engageProperties.load(context.getAssets().open(AppLaunchConstants.ENGAGE_CLIENT_PROPS_NAME));
+                engageProperties.load(context.getAssets().open(AppLaunchConstants.APP_LAUNCH_CLIENT_PROPS_NAME));
 
                 PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 con = context;
 
                 if (getHost() == null || getHost().isEmpty()) {
-                    throw new RuntimeException("You must specify the server host (engageServerHost) in the client configuration file (" + AppLaunchConstants.ENGAGE_CLIENT_PROPS_NAME + ").");
+                    throw new RuntimeException("You must specify the server host (engageServerHost) in the client configuration file (" + AppLaunchConstants.APP_LAUNCH_CLIENT_PROPS_NAME + ").");
                 }
             } catch (IOException e) {
-                throw new RuntimeException("Client configuration file " + AppLaunchConstants.ENGAGE_CLIENT_PROPS_NAME + " not found in application assets.");
+                throw new RuntimeException("Client configuration file " + AppLaunchConstants.APP_LAUNCH_CLIENT_PROPS_NAME + " not found in application assets.");
 
             } catch (PackageManager.NameNotFoundException e) {
                 throw new Error(e);
             }
         } else {
-            throw new RuntimeException("Client configuration file " + AppLaunchConstants.ENGAGE_CLIENT_PROPS_NAME + " contains a BOM (Byte Order Mark). Save the file without a BOM");
+            throw new RuntimeException("Client configuration file " + AppLaunchConstants.APP_LAUNCH_CLIENT_PROPS_NAME + " contains a BOM (Byte Order Mark). Save the file without a BOM");
         }
 
     }
@@ -55,7 +55,7 @@ public class AppLaunchProperties {
 
     private boolean isBOMPresent(Context context) {
         try {
-            InputStream inputStream = context.getAssets().open(AppLaunchConstants.ENGAGE_CLIENT_PROPS_NAME);
+            InputStream inputStream = context.getAssets().open(AppLaunchConstants.APP_LAUNCH_CLIENT_PROPS_NAME);
 
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF8"));
             // BOM marker will only appear at the very beginning
@@ -73,19 +73,19 @@ public class AppLaunchProperties {
 
 
     public String getProtocol() {
-        return engageProperties.getProperty(AppLaunchConstants.ENGAGE_SERVER_PROTOCOL);
+        return engageProperties.getProperty(AppLaunchConstants.APP_LAUNCH_SERVER_PROTOCOL);
     }
 
     public String getHost() {
-        return engageProperties.getProperty(AppLaunchConstants.ENGAGE_SERVER_HOST);
+        return engageProperties.getProperty(AppLaunchConstants.APP_LAUNCH_SERVER_HOST);
     }
 
     public String getPort() {
-        return engageProperties.getProperty(AppLaunchConstants.ENGAGE_SERVER_PORT);
+        return engageProperties.getProperty(AppLaunchConstants.APP_LAUNCH_SERVER_PORT);
     }
 
     public String getServerContext() {
-        return engageProperties.getProperty(AppLaunchConstants.ENGAGE_SERVER_CONTEXT);
+        return engageProperties.getProperty(AppLaunchConstants.APP_LAUNCH_SERVER_CONTEXT);
     }
 
 
