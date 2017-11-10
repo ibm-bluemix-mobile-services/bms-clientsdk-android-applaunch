@@ -15,7 +15,6 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 - [Installation](#installation)
 - [Initialize SDK](#initialize-sdk)
     - [Include client App Launch SDK](#include-client-app-launch-sdk)
-    - [App Launch Config](#config-app-launch-parameters)
     - [Initialize](#initialize) 
     - [Register](#register) 
     - [Update User](#update-user)   
