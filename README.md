@@ -50,7 +50,6 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 ## Installation
 ## Initialize SDK
 
-
 ### Include client App Launch SDK 
 
 To use the Bluemix App Launch SDK include the following:
