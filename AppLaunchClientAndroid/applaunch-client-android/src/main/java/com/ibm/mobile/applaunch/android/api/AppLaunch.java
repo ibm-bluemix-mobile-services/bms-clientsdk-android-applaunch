@@ -64,14 +64,15 @@ public class AppLaunch {
     private String userOSType = "android";
     private String userLocale;
     private AppLaunchConfig appLaunchConfig;
-    private static final String APP_LAUNCH = "AppLaunch" ;
+
+    private AppLaunchCacheManager appLaunchCacheManager=null;
     private boolean isInitialized = false;
     private AppLaunchResponseListener myListener;
     SharedPreferences prefs = null;
     private JSONArray features = null;
     private boolean renderUi = true;
     private HashMap<String, JSONObject> featureList;
-    private SharedPreferences sharedpreferences;
+
     private String actions=null;
     protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + AppLaunch.class.getSimpleName());
 
@@ -85,12 +86,13 @@ public class AppLaunch {
         super();
         featureList = new HashMap<>();
         messageList = new ArrayList<>();
+        appLaunchCacheManager = AppLaunchCacheManager.getInstance();
     }
 
     public synchronized static AppLaunch getInstance() {
         if (thisInstance == null) {
             thisInstance = new AppLaunch();
-        }
+         }
         return thisInstance;
     }
 
@@ -103,6 +105,7 @@ public class AppLaunch {
      */
     public void initApp(Application context,String region, String appGuid, String clientSecret){
         if (appGuid != null && context != null && clientSecret!=null && region!=null ) {
+            appLaunchCacheManager.initializeCache(context);
             String baseUrl="";
             if(region.equals(BMSClient.REGION_US_SOUTH)){
                 baseUrl = AppLaunchConstants.REGION_US_SOUTH;
@@ -113,14 +116,15 @@ public class AppLaunch {
             }
             this.appLaunchConfig = new AppLaunchConfig(context,region,appGuid,clientSecret);
             appContext = context;
-            sharedpreferences = appLaunchConfig.getApplication().getSharedPreferences(APP_LAUNCH, Context.MODE_PRIVATE);
+
          //   isFirstTimeUser = sharedpreferences.getBoolean(AppLaunchConstants.FIRST_TIME_USER,true);
             BMSClient.getInstance().initialize(appLaunchConfig.getContext(), region);
             appLaunchProperties = AppLaunchProperties.getInstance(appLaunchConfig.getContext());
             URL = appLaunchProperties.getProtocol() + "://" +baseUrl + ":" + appLaunchProperties.getPort() + appLaunchProperties.getServerContext();
             ANALYZER_URL = appLaunchProperties.getAnalyzerProtocol() + "://" + baseUrl + ":" + appLaunchProperties.getAnalyzerServerPort() + appLaunchProperties.getAnalyzerServerContext();
             ANALYZER_URL += appLaunchConfig.getApplicationId();
-            String user = sharedpreferences.getString(AppLaunchConstants.APP_USER,null);
+          //  String user = sharedpreferences.getString(AppLaunchConstants.APP_USER,null);
+            String user = appLaunchCacheManager.getString(AppLaunchConstants.APP_USER,null);
             if(user!=null){
                 appLaunchConfig.setUserID(user);
             }
@@ -230,17 +234,17 @@ public class AppLaunch {
                 }
                 appLaunchConfig.setUserID(userId);
                 //proceed to registration only if the user is a new user
-                if(sharedpreferences.getString(userId+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),null)==null){
+                if(appLaunchCacheManager.getString(userId+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),null)==null){
                    // ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
                     AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
-                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                  /*  SharedPreferences.Editor editor = sharedpreferences.edit();
                     editor.putString(ANALYZER_URL,ANALYZER_URL);
                     editor.putString(AppLaunchConstants.APP_USER,userId);
-                    editor.commit();
+                    editor.commit();*/
                     register(appLaunchResponseListener,parameters);
                 }else{
                     //if the user is an already registered user return the cached registration response
-                    String registrationResponse = sharedpreferences.getString(userId+"-"+appLaunchConfig.getBluemixRegion(),"");
+                    String registrationResponse = appLaunchCacheManager.getString(userId+"-"+appLaunchConfig.getBluemixRegion(),"");
                     AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
                     appLaunchResponse.setResponseText(registrationResponse);
                     appLaunchResponseListener.onSuccess(appLaunchResponse);
@@ -331,9 +335,10 @@ public class AppLaunch {
                   public void onSuccess(Response response) {
                      actions = response.getResponseText();
                       if(actions!=null){
-                          SharedPreferences.Editor editor = sharedpreferences.edit();
+                          appLaunchCacheManager.addBoolean(ACTIONS_INVOKED,true);
+                         /* SharedPreferences.Editor editor = sharedpreferences.edit();
                           editor.putBoolean(ACTIONS_INVOKED,true);
-                          editor.commit();
+                          editor.commit();*/
                           try {
                               JSONObject actionsObject = new JSONObject(actions);
                               JSONArray featuresArray =  actionsObject.getJSONArray("features");
@@ -372,8 +377,8 @@ public class AppLaunch {
      * @throws AppLaunchException
      */
     public boolean isFeatureEnabled(String featureCode) throws AppLaunchException{
-        if(null!=sharedpreferences ){
-            if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)){
+        if(null!=appLaunchCacheManager ){
+            if(appLaunchCacheManager.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)){
                 if (!featureList.isEmpty() && featureList.containsKey(featureCode)) {
                     return true;
                 }
@@ -391,8 +396,8 @@ public class AppLaunch {
      * @return
      */
     public String getPropertyOfFeature(String featureCode, String variableCode) throws AppLaunchException {
-        if(null!=sharedpreferences ){
-            if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)) {
+        if(null!=appLaunchCacheManager ){
+            if(appLaunchCacheManager.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)) {
                 String returnValue = null;
                 if (featureList.containsKey(featureCode)) {
                     JSONObject featureObject = featureList.get(featureCode);
@@ -524,6 +529,7 @@ public class AppLaunch {
                 for (int index = 0; index < features.length(); index++) {
                     JSONObject jsonObject = (JSONObject) features.get(index);
                     featureList.put(jsonObject.getString("code"), jsonObject);
+                    appLaunchCacheManager.addFeatureToCache(jsonObject);
                 }
             } catch (JSONException e) {
                 throw new RuntimeException(e.getMessage());
@@ -661,10 +667,11 @@ public class AppLaunch {
                 Log.d("POST INVOKE FUNCTION::", response.getResponseText());
                 AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
                 appLaunchResponse.setResponseText(response.getResponseText());
-                if("initialize".equals(methodName) && sharedpreferences!=null){
-                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                if("initialize".equals(methodName) && appLaunchCacheManager!=null){
+                    appLaunchCacheManager.addString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
+                    /*SharedPreferences.Editor editor = sharedpreferences.edit();
                     editor.putString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
-                    editor.commit();
+                    editor.commit();*/
                 }
                 appLaunchResponseListener.onSuccess(appLaunchResponse);
                 //  responseListener.onSuccess("SUCCESS:: invoke function pushed");
