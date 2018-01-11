@@ -12,7 +12,7 @@ import com.ibm.mobile.applaunch.android.AppLaunchFailResponse;
 import com.ibm.mobile.applaunch.android.AppLaunchResponse;
 import com.ibm.mobile.applaunch.android.api.AppLaunchConfig;
 import com.ibm.mobile.applaunch.android.api.AppLaunchListener;
-import com.ibm.mobile.applaunch.android.api.AppLaunchSDK;
+import com.ibm.mobile.applaunch.android.api.AppLaunch;
 import com.ibm.mobile.applaunch.android.api.AppLaunchUser;
 import com.ibm.mobile.applaunch.android.api.ICRegion;
 import com.ibm.mobile.applaunch.android.api.RefreshPolicy;
@@ -48,7 +48,7 @@ public class HomeActivity extends AppCompatActivity implements AppLaunchListener
 
         AppLaunchConfig appLaunchConfig = new AppLaunchConfig.Builder().eventFlushInterval(10).cacheExpiration(10).fetchPolicy(RefreshPolicy.REFRESH_ON_EVERY_START).deviceId("f88ky8u").build();
         AppLaunchUser appLaunchUser = new AppLaunchUser.Builder().userId("norton").custom("test","newtest").build();
-       AppLaunchSDK.getInstance().init(getApplication(), ICRegion.US_SOUTH_STAGING,"852301c1-128e-4b11-80f5-9d113cdb976f","ecf53cdf-40ca-4239-9c49-15cdd88a36e7",appLaunchConfig,appLaunchUser,this);
+       AppLaunch.getInstance().init(getApplication(), ICRegion.US_SOUTH_STAGING,"852301c1-128e-4b11-80f5-9d113cdb976f","ecf53cdf-40ca-4239-9c49-15cdd88a36e7",appLaunchConfig,appLaunchUser,this);
 
 
 
@@ -80,7 +80,7 @@ public class HomeActivity extends AppCompatActivity implements AppLaunchListener
     @Override
     public void onSuccess(AppLaunchResponse response) {
         Log.i("onSuccess",response.getResponseJSON().toString());
-        AppLaunchSDK.getInstance().displayInAppMessages(HomeActivity.this);
+        AppLaunch.getInstance().displayInAppMessages(HomeActivity.this);
     }
 
     @Override

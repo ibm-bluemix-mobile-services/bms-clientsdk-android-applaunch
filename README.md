@@ -25,9 +25,6 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 - [Initialize SDK](#initialize-sdk)
     - [Include client App Launch SDK](#include-client-app-launch-sdk)
     - [Initialize](#initialize) 
-    - [Register](#register) 
-    - [Update User](#update-user)   
-- [Actions](#actions)
 - [Feature Toggle](#feature-toggle)
     - [Check if feature is enabled](#check-if-feature-is-enabled)
     - [Get variable for feature](#get-variable-for-feature)
@@ -95,96 +92,43 @@ A common place to put the initialization code is the`onCreate()`method of the `m
 
 ```
 // Initialize the SDK
-  AppLaunch.getInstance().initApp(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret");
+AppLaunchConfig appLaunchConfig = new AppLaunchConfig.Builder().eventFlushInterval(10).cacheExpiration(10).fetchPolicy(RefreshPolicy.REFRESH_ON_EVERY_START).deviceId("f88ky8u").build();
+AppLaunchUser appLaunchUser = new AppLaunchUser.Builder().userId("norton").custom("test","newtest").build();
+AppLaunch.getInstance().init(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret",appLaunchConfig,appLaunchUser,AppLaunchListener);
 ```
+
+The AppLaunchConfig builder is used to customize the following:
+`eventFlushInterval` : Decides the time interval the events should be sent to the server. The default value is 30 minutes.
+
+`cacheExpiration` : Decides the time interval the actions should be valid for. On expiration time the actions are fetched from the server. This parameter has effect when the `RefreshPolicy` is set to `RefreshPolicy.REFRESH_ON_EXPIRY` or `RefreshPolicy.BACKGROUND_REFRESH`
+
+`fetchPolicy` : This parameter decides on how frequently the actions should be fetched from the server. The values can be one of the following:
+
+ `RefreshPolicy.REFRESH_ON_EVERY_START`
+  
+  `RefreshPolicy.REFRESH_ON_EXPIRY`
+ 
+  `RefreshPolicy.BACKGROUND_REFRESH`
+ 
+ `deviceId` : This parameter must be unique.
+ 
+  **Note:Do not rely on the default implementation of the device ID it is not guarenteed to be unique.**
+
+The AppLaunchUser builder is used to provide the following information:
+
+`userId`: The user to be registered
+
+`custom`: This can be used to pass any optional custom attributes. 
 
 Where `bluemixRegionSuffix` specifies the location where the app is hosted. You can use any of the following values:
 
-- `BMSClient.REGION_US_SOUTH`
-- `BMSClient.REGION_UK`
-- `BMSClient.REGION_SYDNEY`
+- `ICRegion.US_SOUTH_STAGING`
+- `ICRegion.US_SOUTH`
 
 The `appGUID` is the app launch app GUID value, while `clientSecret` is the appLaunch client secret value which can be obtained from the service console.
 
 **Note: initApp should be the first call in the application.**
-
-### Register
-To register the user invoke ```AppLaunch.getInstance().registerUser()``` api: 
-
-```
-// Register the user
-        AppLaunchParameters appLaunchParameters = new AppLaunchParameters();
-        appLaunchParameters.put("customerType","platinum");
-        AppLaunch.getInstance().registerUser("userId", appLaunchParameters,new AppLaunchResponseListener() {
-            @Override
-            public void onSuccess(AppLaunchResponse appLaunchResponse) {
-               
-           }
-
-            @Override
-            public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
-          
-            }
-        });
-```
-
-The ```AppLaunchParameters``` can be used to pass any optional custom attributes while registering the user. 
-
-Register users can also be invoked in the following ways:
-
-`registerUser(String userId, final AppLaunchResponseListener appLaunchResponseListener)`
-
-`registerUser(String userId)`
-
-`registerUser(String userId,AppLaunchParameters parameters)`
-
-`registerUser(String userId,String key,String value)`
-
-`registerUser(String userId,String key,String value,AppLaunchResponseListener appLaunchResponseListener)`
-
-`registerUser(String userId,AppLaunchParameters parameters,AppLaunchResponseListener appLaunchResponseListener)`
-
-**Note: To update user details invoke the updateUser() api**
-
-### Update User
-Use this api to update the user post user registration
-
-```
- AppLaunchParameters appLaunchParameters = new AppLaunchParameters();
-        appLaunchParameters.put("customerType","platinum");
- AppLaunch.getInstance().updateUser(appLaunchParameters, new AppLaunchResponseListener() {
-            @Override
-            public void onSuccess(AppLaunchResponse appLaunchResponse) {
-       
-            }
-
-            @Override
-            public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
-   
-            }
-        });
-```
-
-The ```AppLaunchParameters``` can be used to pass any optional custom attributes. 
-
-Update user can also be invoked in the following ways:
-
-`updateUser(String key,String value)`
-
-`updateUser(String key,String value, final AppLaunchResponseListener appLaunchResponseListener)`
-
-
-## Actions
-
-### Get Actons
-
-Use the ` AppLaunch.getInstance().getActions()` API to fetch all the actions assosicated with the application. 
-
-     AppLaunch.getInstance().getActions(AppLaunchActions);
-
-Here AppLaunchActions is an interface which has to be implemented in the application. The interface provides callback methods which gets triggered if the features are present in the actions.        
-
-
+     
 ## Feature Toggle
 
 ### Check if feature is enabled
