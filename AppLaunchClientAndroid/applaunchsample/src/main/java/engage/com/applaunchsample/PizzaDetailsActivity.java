@@ -5,7 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
-import com.ibm.mobile.applaunch.android.api.AppLaunchSDK;
+import com.ibm.mobile.applaunch.android.api.AppLaunch;
 
 import java.util.ArrayList;
 
@@ -27,13 +27,13 @@ public class PizzaDetailsActivity extends AppCompatActivity   {
             public void onClick(View v) {
                 ArrayList<String> metrics = new ArrayList<String>();
                 metrics.add("_7ybkgux2n");
-                AppLaunchSDK.getInstance().sendMetrics(metrics);
+                AppLaunch.getInstance().sendMetrics(metrics);
             }
         });
 
         try{
-            if(AppLaunchSDK.getInstance().isFeatureEnabled("_j98xjn74z")){
-                String value = AppLaunchSDK.getInstance().getPropertyOfFeature("_j98xjn74z","_1pgqug4y5");
+            if(AppLaunch.getInstance().isFeatureEnabled("_j98xjn74z")){
+                String value = AppLaunch.getInstance().getPropertyOfFeature("_j98xjn74z","_1pgqug4y5");
                 if(Boolean.valueOf(value)){
                     runOnUiThread(new Runnable() {
                         @Override
@@ -60,8 +60,8 @@ public class PizzaDetailsActivity extends AppCompatActivity   {
 
     public void onFeaturesReceived(String features) {
         try{
-            if(AppLaunchSDK.getInstance().isFeatureEnabled("_j98xjn74z")){
-                String value = AppLaunchSDK.getInstance().getPropertyOfFeature("_j98xjn74z","_1pgqug4y5");
+            if(AppLaunch.getInstance().isFeatureEnabled("_j98xjn74z")){
+                String value = AppLaunch.getInstance().getPropertyOfFeature("_j98xjn74z","_1pgqug4y5");
                 if(Boolean.valueOf(value)){
                     runOnUiThread(new Runnable() {
                         @Override
