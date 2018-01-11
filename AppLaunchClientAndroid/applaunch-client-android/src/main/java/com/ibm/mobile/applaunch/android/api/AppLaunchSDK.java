@@ -1,10 +1,14 @@
 package com.ibm.mobile.applaunch.android.api;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Application;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,9 +22,10 @@ import com.ibm.mobile.applaunch.android.AppLaunchFailResponse;
 import com.ibm.mobile.applaunch.android.AppLaunchResponse;
 import com.ibm.mobile.applaunch.android.AppLaunchResponseListener;
 import com.ibm.mobile.applaunch.android.R;
+import com.ibm.mobile.applaunch.android.background.AppLaunchAlarmReceiver;
 import com.ibm.mobile.applaunch.android.common.AppLaunchConstants;
-import com.ibm.mobile.applaunch.android.common.AppLaunchProperties;
 import com.ibm.mobile.applaunch.android.common.AppLaunchUtils;
+import com.ibm.mobile.applaunch.android.internal.AppLaunchUrlBuilder;
 import com.ibm.mobile.applaunch.android.logger.AppLaunchAnalytics;
 import com.ibm.mobilefirstplatform.clientsdk.android.analytics.api.Analytics;
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.BMSClient;
@@ -34,124 +39,148 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static android.content.Context.LAYOUT_INFLATER_SERVICE;
 import static com.ibm.mobile.applaunch.android.R.id.buttonpanel;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_INVOKED;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_LAST_REFRESH;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ANALYZER_URL;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.CODE;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.INAPP_MESSAGES;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.PROPERTIES;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.TRIGGER_EVERY_ALTERNATE_LAUNCH;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.TRIGGER_EVERY_LAUNCH;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.TRIGGER_FIRST_LAUNCH;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.TRIGGER_ONCE_AND_ONLY_ONCE;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.VALUES;
 
 /**
  * Created by norton on 7/21/17.
  */
 
-public class AppLaunch {
+public class AppLaunchSDK {
 
 
-    private AppLaunchProperties appLaunchProperties;
     public static final String PREFS_NAME = "com.ibm.mobile.services.engage";
-    // public static final String URL = "http://10.0.2.2:8080/api/v1/";
-
-    private String URL;
-    private String ANALYZER_URL;
     private String appGUID;
     private String clientSecret;
     private String deviceId;
     private String userOSType = "android";
     private String userLocale;
+    private AppLaunchUrlBuilder appLaunchUrlBuilder;
     private AppLaunchConfig appLaunchConfig;
-    private static final String APP_LAUNCH = "AppLaunch" ;
+   // private AppLaunchUser appLaunchUser;
+
+    private AppLaunchCacheManager appLaunchCacheManager=null;
     private boolean isInitialized = false;
     private AppLaunchResponseListener myListener;
     SharedPreferences prefs = null;
     private JSONArray features = null;
     private boolean renderUi = true;
     private HashMap<String, JSONObject> featureList;
-    private SharedPreferences sharedpreferences;
+
     private String actions=null;
-    protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + AppLaunch.class.getSimpleName());
+    protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + AppLaunchSDK.class.getSimpleName());
 
-    private static Context appContext = null;
+    private Application appContext = null;
 
-    private ArrayList<MessageData> messageList;
+    private HashMap<String,MessageData> messageList;
 
-    private static AppLaunch thisInstance = null;
+    private static AppLaunchSDK thisInstance = null;
 
-    private AppLaunch() {
+    private AppLaunchSDK() {
         super();
         featureList = new HashMap<>();
-        messageList = new ArrayList<>();
+        messageList = new HashMap<>();
+        appLaunchCacheManager = AppLaunchCacheManager.getInstance();
     }
 
-    public synchronized static AppLaunch getInstance() {
+    public synchronized static AppLaunchSDK getInstance() {
         if (thisInstance == null) {
-            thisInstance = new AppLaunch();
-        }
+            thisInstance = new AppLaunchSDK();
+         }
         return thisInstance;
     }
 
+
     /**
-     * Initialize app details
+     *
      * @param context
+     * @param region
      * @param appGuid
      * @param clientSecret
-     * @param region
+     * @param config
+     * @param user
+     * @param appLaunchActionListener
      */
-    public void initApp(Application context,String region, String appGuid, String clientSecret){
-        if (appGuid != null && context != null && clientSecret!=null && region!=null ) {
-            String baseUrl="";
-            if(region.equals(BMSClient.REGION_US_SOUTH)){
-                baseUrl = AppLaunchConstants.REGION_US_SOUTH;
-            }else if(region.equals("staging.ng.bluemix.net")){
-                baseUrl = AppLaunchConstants.REGION_US_SOUTH_STAGING;
-            }else if(region.equals("dev.ng.bluemix.net")){
-                baseUrl = AppLaunchConstants.REGION_US_SOUTH_DEV;
-            }
-            this.appLaunchConfig = new AppLaunchConfig(context,region,appGuid,clientSecret);
+    public void init(Application context,ICRegion region, String appGuid, String clientSecret, AppLaunchConfig config, AppLaunchUser user, AppLaunchListener appLaunchActionListener){
+        if (appGuid != null && context != null && clientSecret!=null && region!=null && user.getUserId()!=null ) {
             appContext = context;
-            sharedpreferences = appLaunchConfig.getApplication().getSharedPreferences(APP_LAUNCH, Context.MODE_PRIVATE);
-         //   isFirstTimeUser = sharedpreferences.getBoolean(AppLaunchConstants.FIRST_TIME_USER,true);
-            BMSClient.getInstance().initialize(appLaunchConfig.getContext(), region);
-            appLaunchProperties = AppLaunchProperties.getInstance(appLaunchConfig.getContext());
-            URL = appLaunchProperties.getProtocol() + "://" +baseUrl + ":" + appLaunchProperties.getPort() + appLaunchProperties.getServerContext();
-            ANALYZER_URL = appLaunchProperties.getAnalyzerProtocol() + "://" + baseUrl + ":" + appLaunchProperties.getAnalyzerServerPort() + appLaunchProperties.getAnalyzerServerContext();
-            ANALYZER_URL += appLaunchConfig.getApplicationId();
-            String user = sharedpreferences.getString(AppLaunchConstants.APP_USER,null);
-            if(user!=null){
-                appLaunchConfig.setUserID(user);
+            //if app launch listener ==null create a dummy action listener
+            if(appLaunchActionListener==null) {
+             appLaunchActionListener = new AppLaunchListener() {
+                    @Override
+                    public void onSuccess(AppLaunchResponse response) {
+
+                    }
+
+                    @Override
+                    public void onFailure(AppLaunchFailResponse failResponse) {
+
+                    }
+                };
             }
-            if(appLaunchConfig.getUserID()!=null && appLaunchConfig.getUserID().length()>0){
-                //override the default server url to send analytics information
-                AppLaunchAnalytics.overrideServerHost = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID();
-            }
+            BMSClient.getInstance().initialize(appContext, region.toString());
+            appLaunchCacheManager.initializeCache(context);
+            appLaunchConfig = config;
+            //set all values into applaunchconfig internal methods to avoid global variable declarations
+            appLaunchConfig.setBluemixRegion(region.toString());
+            appLaunchConfig.setApplicationId(appGuid);
+            appLaunchConfig.setClientSecret(clientSecret);
+            appLaunchUrlBuilder = new AppLaunchUrlBuilder(region,appGuid,appLaunchConfig.getDeviceId(),user.getUserId());
+            //load default feature for the app
+            appLaunchCacheManager.loadDefaultFeatures(appLaunchActionListener);
+
+            String userId = appLaunchCacheManager.getString(AppLaunchConstants.APP_USER,null);
+            AppLaunchAnalytics.overrideServerHost = appLaunchUrlBuilder.getAnalyzerURL();
+            //registerDevice the user
+            registerDevice(user,appLaunchActionListener);
+            //fetch actions from the server
 
         }else{
             throw new RuntimeException("Invalid Init paramters");
         }
     }
 
-    /**
-     * @param userId
-     * @param appLaunchResponseListener
-     */
-    public void registerUser(String userId, final AppLaunchResponseListener appLaunchResponseListener) {
-        if(appLaunchResponseListener==null|| userId==null)
-            throw new RuntimeException("AppLaunch:register() - arguments cannot be null.", null);
-       register(userId,appLaunchResponseListener,null);
+
+    private void registerDevice(AppLaunchUser user,AppLaunchListener appLaunchActionListener) {
+        if(user.getUserId()==null)
+            throw new RuntimeException("AppLaunch:init() - arguments cannot be null.", null);
+            registerDevice(user.getUserId(),appLaunchActionListener,user.getParameters());
     }
+
 
     /**
      *
      * @param userId
      */
-    public void registerUser(String userId){
+    private void registerDevice(String userId){
         if(userId==null)
-            throw new RuntimeException("AppLaunch:register() - userId cannot be null.", null);
-        register(userId,null,null);
+            throw new RuntimeException("AppLaunch:registerDevice() - userId cannot be null.", null);
+        registerDevice(userId,null,null);
     }
 
 
@@ -160,169 +189,117 @@ public class AppLaunch {
      * @param userId
      * @param parameters
      */
-    public void registerUser(String userId,AppLaunchParameters parameters){
+    private void registerDevice(String userId, Hashtable parameters){
         if(userId==null|| parameters==null)
-            throw new RuntimeException("AppLaunch:register() - arguemnts cannot be null.", null);
-        register(userId,null,parameters.getParameters());
+            throw new RuntimeException("AppLaunch:registerDevice() - arguemnts cannot be null.", null);
+        registerDevice(userId,null,parameters);
     }
 
 
-    /**
-     *
-     * @param userId
-     * @param key
-     * @param value
-     */
-    public void registerUser(String userId,String key,String value){
-        if(userId==null|| key==null||value==null)
-            throw new RuntimeException("AppLaunch:register() - arguemnts cannot be null.", null);
-        AppLaunchParameters appLaunchParameters = new AppLaunchParameters();
-        appLaunchParameters.put(key,value);
-        register(userId,null,appLaunchParameters.getParameters());
-    }
-
-
-    /**
-     *
-     * @param userId
-     * @param key
-     * @param value
-     * @param appLaunchResponseListener
-     */
-    public void registerUser(String userId,String key,String value,AppLaunchResponseListener appLaunchResponseListener){
-        if(userId==null|| key==null||value==null || appLaunchResponseListener==null)
-            throw new RuntimeException("AppLaunch:register() - arguemnts cannot be null.", null);
-        AppLaunchParameters appLaunchParameters = new AppLaunchParameters();
-        appLaunchParameters.put(key,value);
-        register(userId,appLaunchResponseListener,appLaunchParameters.getParameters());
-    }
-
-
-
-    /**
-     * @param userId
-     * @param parameters
-     * @param appLaunchResponseListener
-     */
-    public void registerUser(String userId,AppLaunchParameters parameters,AppLaunchResponseListener appLaunchResponseListener) {
-        if(appLaunchResponseListener==null || userId==null || parameters==null)
-            throw new RuntimeException("AppLaunch:register() - arguments  cannot be null.", null);
-        register(userId,appLaunchResponseListener,parameters.getParameters());
-    }
-
-
-    private void register(String userId,AppLaunchResponseListener appLaunchResponseListener, Hashtable parameters){
+    private void registerDevice(String userId, AppLaunchListener appLaunchListener, Hashtable parameters){
         try {
-            if (null != appLaunchConfig && null != appLaunchConfig.getContext() && userId!=null) {
-                //create a dummy listener if the object is null
-                if(appLaunchResponseListener==null) {
-                    appLaunchResponseListener = new AppLaunchResponseListener() {
-                        @Override
-                        public void onSuccess(AppLaunchResponse appLaunchResponse) {
+            if (null != appLaunchConfig && null != appContext && userId!=null) {
 
-                        }
-
-                        @Override
-                        public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
-
-                        }
-                    };
-                }
                 appLaunchConfig.setUserID(userId);
                 //proceed to registration only if the user is a new user
-                if(sharedpreferences.getString(userId+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),null)==null){
-                   // ANALYZER_URL+="/users/"+ appLaunchConfig.getUserID();
-                    AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
-                    SharedPreferences.Editor editor = sharedpreferences.edit();
-                    editor.putString(ANALYZER_URL,ANALYZER_URL);
-                    editor.putString(AppLaunchConstants.APP_USER,userId);
-                    editor.commit();
-                    register(appLaunchResponseListener,parameters);
+                if(appLaunchCacheManager.getString(userId+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),null)==null){
+                  //  AppLaunchAnalytics.overrideServerHost = ANALYZER_URL;
+                    register(appLaunchListener,parameters,false);
                 }else{
                     //if the user is an already registered user return the cached registration response
-                    String registrationResponse = sharedpreferences.getString(userId+"-"+appLaunchConfig.getBluemixRegion(),"");
-                    AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                    appLaunchResponse.setResponseText(registrationResponse);
-                    appLaunchResponseListener.onSuccess(appLaunchResponse);
+                    String registrationResponse = appLaunchCacheManager.getString(userId+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),"");
+                    String cachedParams = appLaunchCacheManager.getString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId()+"-params","");
+                    boolean shouldUpdateUser=false;
+                    JSONObject cachedParamJson = new JSONObject(cachedParams);
+                    Enumeration paramKeys = parameters.keys();
+                    while (paramKeys.hasMoreElements()){
+                        String key = (String) paramKeys.nextElement();
+                        if(!cachedParamJson.has(key)){
+                            shouldUpdateUser = true;
+                            break;
+                        }
+                    }
+                    if(shouldUpdateUser){
+                        register(appLaunchListener,parameters,true);
+                        //invoke update user request
+                    }else{
+                        loadActions(appLaunchListener);
+                    }
                 }
             } else {
-                logger.error("AppLaunch:register() - Invoke initApp() before register");
-                throw new RuntimeException("AppLaunch:register() - Invoke initApp() before register or invalid parameters", null);
+                logger.error("AppLaunch:registerDevice() - Invoke initApp() before registerDevice");
+                throw new RuntimeException("AppLaunch:registerDevice() - Invoke initApp() before registerDevice or invalid parameters", null);
             }
         } catch (Exception e) {
-            AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-            appLaunchFailResponse.setErrorMsg(e.getMessage());
-            appLaunchResponseListener.onFailure(appLaunchFailResponse);
+            AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse(ErrorCode.REGISTRATION_FAILURE,e.getMessage());
+            appLaunchListener.onFailure(appLaunchFailResponse);
             logger.error("EngageCore:initialize() - An error occured while initializing EngageCore service.");
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * @param parameters
-     * @param appLaunchResponseListener
-     */
-    public void updateUser(AppLaunchParameters parameters, final AppLaunchResponseListener appLaunchResponseListener) {
-        try {
-            if (null == parameters || null == appLaunchResponseListener) {
-                logger.error("AppLaunch:updateUser() -  arguments cannot be null");
-                throw new RuntimeException("AppLaunch:updateUser() -  arguments cannot be null", null);
-            }
-            register(appLaunchResponseListener,parameters.getParameters());
-        } catch (Exception e) {
-            AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-            appLaunchFailResponse.setErrorMsg(e.getMessage());
-            appLaunchResponseListener.onFailure(appLaunchFailResponse);
-            logger.error("EngageCore:updateUser() - An error occured while updateUser EngageCore service.");
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * @param key
-     * @param value
-     */
-    public void updateUser(String key,String value) {
-        try {
-            if (null == key || null == value) {
-                logger.error("AppLaunch:updateUser() -  arguments cannot be null");
-                throw new RuntimeException("AppLaunch:updateUser() -  arguments cannot be null", null);
-            }
-            AppLaunchParameters parameters = new AppLaunchParameters();
-            parameters.put(key,value);
-            register(null,parameters.getParameters());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+           // throw new RuntimeException(e);
         }
     }
 
 
-    /**
-     * @param key
-     * @param value
-     */
-    public void updateUser(String key,String value, final AppLaunchResponseListener appLaunchResponseListener) {
-        try {
-            if (null == key || null == value || appLaunchResponseListener==null) {
-                logger.error("AppLaunch:updateUser() -  arguments cannot be null");
-                throw new RuntimeException("AppLaunch:updateUser() -  arguments cannot be null", null);
+    private void loadActions(final AppLaunchListener appLaunchListener){
+        //refresh actions on every start of the app
+        if(RefreshPolicy.REFRESH_ON_EVERY_START.equals(appLaunchConfig.getRefreshPolicy())){
+            refreshActions(appLaunchListener);
+        }else if(RefreshPolicy.REFRESH_ON_EXPIRY.equals(appLaunchConfig.getRefreshPolicy())){
+            //refresh only if cache is expired
+            long actionsLastRefresh = appLaunchCacheManager.getLong(ACTIONS_LAST_REFRESH,new Date().getTime());
+            Date lastRefresh = new Date();
+            lastRefresh.setTime(actionsLastRefresh);
+            Date currentTime = new Date();
+            long cacheExpirationTime = appLaunchConfig.getCacheExpiration()*1000;
+            long timeLapsed = currentTime.getTime()-lastRefresh.getTime();
+            if(timeLapsed>cacheExpirationTime){
+                refreshActions(appLaunchListener);
             }
-            AppLaunchParameters parameters = new AppLaunchParameters();
-            parameters.put(key,value);
-            register(appLaunchResponseListener,parameters.getParameters());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        }else{
+            //return the cached actions response back since nothing has changed since the previous call
+            try{
+                //load inapp messages from cache into memory
+                String inappMessageString = appLaunchCacheManager.getString(INAPP_MESSAGES,"");
+                if(inappMessageString!=null && inappMessageString.length()>0){
+                    JSONArray inappMessageList = new JSONArray(inappMessageString);
+                    processInAppMessages(inappMessageList);
+                }
+                AppLaunchResponse actionsResponse = new AppLaunchResponse();
+                String cachedActionsResponse = appLaunchCacheManager.getString(ACTIONS,"");
+                actionsResponse.setResponseJSON(new JSONObject(cachedActionsResponse));
+                appLaunchListener.onSuccess(actionsResponse);
+            }catch (Exception ex){
+                AppLaunchFailResponse applaunchFailResponse = new AppLaunchFailResponse(ErrorCode.PROCESS_ACTIONS_FAILURE,ex.getMessage());
+                appLaunchListener.onFailure(applaunchFailResponse);
+            }
         }
+
+
+    }
+
+    private void refreshActions(final AppLaunchListener appLaunchListener){
+        getActions(new AppLaunchInternalListener() {
+            @Override
+            public void onSuccess(AppLaunchResponse appLaunchResponse) {
+                appLaunchListener.onSuccess(appLaunchResponse);
+            }
+
+            @Override
+            public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+                AppLaunchFailResponse applaunchActionsFail = new AppLaunchFailResponse(ErrorCode.FETCH_ACTIONS_FAILURE,appLaunchFailResponse.getErrorMsg());
+                appLaunchListener.onFailure(applaunchActionsFail);
+            }
+        });
     }
 
     /**
      * @param appLaunchActions
      */
-    public void getActions(final AppLaunchActions appLaunchActions) {
+    private void getActions(final AppLaunchInternalListener appLaunchActions) {
       if(appLaunchActions!=null){
-          if (null != appLaunchConfig && null != appLaunchConfig.getContext()) {
+          if (null != appLaunchConfig && null != appContext) {
 
-              String actionsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID() + "/actions?deviceId="+ AppLaunchUtils.getDeviceId();
+             // String actionsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID() + "/actions?deviceId="+ AppLaunchUtils.getDeviceId();
+              final String actionsUrl = appLaunchUrlBuilder.getActionURL();
               Request getReq = new Request(actionsUrl, Request.GET);
               getReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
 
@@ -331,17 +308,24 @@ public class AppLaunch {
                   public void onSuccess(Response response) {
                      actions = response.getResponseText();
                       if(actions!=null){
-                          SharedPreferences.Editor editor = sharedpreferences.edit();
+                          appLaunchCacheManager.addBoolean(ACTIONS_INVOKED,true);
+                          appLaunchCacheManager.addLong(ACTIONS_LAST_REFRESH,new Date().getTime());
+                          appLaunchCacheManager.addString(ACTIONS,actions);
+                         /* SharedPreferences.Editor editor = sharedpreferences.edit();
                           editor.putBoolean(ACTIONS_INVOKED,true);
-                          editor.commit();
+                          editor.commit();*/
                           try {
                               JSONObject actionsObject = new JSONObject(actions);
                               JSONArray featuresArray =  actionsObject.getJSONArray("features");
                               //process features
                               processFeatures(featuresArray);
-                              JSONObject messageObject = actionsObject.getJSONObject("messages");
-                              processInAppMessages(messageObject);
-                              appLaunchActions.onFeaturesReceived(featuresArray.toString());
+                              JSONArray messageArray = actionsObject.getJSONArray("inApp");
+                              appLaunchCacheManager.addString(INAPP_MESSAGES,messageArray.toString());
+                              processInAppMessages(messageArray);
+                              AppLaunchResponse actionsResponse  = new AppLaunchResponse();
+                              actionsResponse.setResponseJSON(actionsObject);
+                              appLaunchActions.onSuccess(actionsResponse);
+                            //  appLaunchActions.onFeaturesReceived(featuresArray.toString());
                           } catch (JSONException e) {
                               e.printStackTrace();
                           }
@@ -352,9 +336,9 @@ public class AppLaunch {
                   public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                       if(response!=null){
                           Log.d("getActions",response.getResponseText());
-                          appLaunchActions.onFeaturesReceived(response.getResponseText());
+                          appLaunchActions.onFailure(new AppLaunchFailResponse(ErrorCode.FETCH_ACTIONS_FAILURE,response.getResponseText()));
                       }else{
-                          appLaunchActions.onFeaturesReceived("Error fetching actions");
+                          appLaunchActions.onFailure(new AppLaunchFailResponse(ErrorCode.FETCH_ACTIONS_FAILURE,"Error fetching actions"));
                       }
 
                   }
@@ -372,8 +356,8 @@ public class AppLaunch {
      * @throws AppLaunchException
      */
     public boolean isFeatureEnabled(String featureCode) throws AppLaunchException{
-        if(null!=sharedpreferences ){
-            if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)){
+        if(null!=appLaunchCacheManager ){
+            if(appLaunchCacheManager.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)){
                 if (!featureList.isEmpty() && featureList.containsKey(featureCode)) {
                     return true;
                 }
@@ -387,22 +371,22 @@ public class AppLaunch {
     /**
      * This api returns the variable for the feature code
      * @param featureCode
-     * @param variableCode
+     * @param propertyCode
      * @return
      */
-    public String getPropertyOfFeature(String featureCode, String variableCode) throws AppLaunchException {
-        if(null!=sharedpreferences ){
-            if(sharedpreferences.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)) {
+    public String getPropertyOfFeature(String featureCode, String propertyCode) throws AppLaunchException {
+        if(null!=appLaunchCacheManager ){
+            if(appLaunchCacheManager.getBoolean(AppLaunchConstants.ACTIONS_INVOKED,false)) {
                 String returnValue = null;
                 if (featureList.containsKey(featureCode)) {
                     JSONObject featureObject = featureList.get(featureCode);
                     try {
-                        JSONArray variableArray = featureObject.getJSONArray("variables");
+                        JSONArray variableArray = featureObject.getJSONArray(PROPERTIES);
                         for (int index = 0; index < variableArray.length(); index++) {
                             try {
                                 JSONObject variableObject = (JSONObject) variableArray.get(index);
-                                if (variableObject.getString("code").equals(variableCode)) {
-                                    returnValue = variableObject.getString("value");
+                                if (variableObject.getString(CODE).equals(propertyCode)) {
+                                    returnValue = variableObject.getString(VALUES);
                                     break;
                                 }
                             } catch (JSONException ex) {
@@ -450,34 +434,54 @@ public class AppLaunch {
     }
 
 
-    private void register(AppLaunchResponseListener appLaunchResponseListener, Hashtable parameters) throws JSONException, Exception{
+    private void register(final AppLaunchListener appLaunchListener, Hashtable parameters,boolean updateUser) throws JSONException, Exception{
         if (AppLaunchUtils.validateString(appLaunchConfig.getClientSecret()) && AppLaunchUtils.validateString(appLaunchConfig.getApplicationId()) && AppLaunchUtils.validateString(appLaunchConfig.getUserID())) {
-            AppLaunchAnalytics.init(appLaunchConfig.getApplication(), appLaunchConfig.getUserID(), "", appLaunchConfig.getClientSecret(), true, Analytics.DeviceEvent.ALL);
+            AppLaunchAnalytics.init(appContext, appLaunchConfig.getUserID(), "", appLaunchConfig.getClientSecret(), true, Analytics.DeviceEvent.ALL);
             this.clientSecret = appLaunchConfig.getClientSecret();
             this.appGUID = appLaunchConfig.getApplicationId();
             //send all the analytics event to the server
             sendLogs();
             //add listener to track app events
-            JSONObject initJson = AppLaunchUtils.getInitJson(appLaunchConfig.getApplication());
+            JSONObject initJson = AppLaunchUtils.getInitJson(appContext);
             if (initJson == null) {
-                throw new RuntimeException("Error constructing register json body");
+                throw new RuntimeException("Error constructing registerDevice json body");
             }
             initJson.put("userId", appLaunchConfig.getUserID());
+            initJson.put("deviceId", appLaunchConfig.getDeviceId());
             if(parameters!=null && parameters.size()>0){
+                JSONObject paramsJson = new JSONObject();
                 Enumeration keys = parameters.keys();
                 while(keys.hasMoreElements()){
                     String key = (String) keys.nextElement();
                     initJson.put(key,parameters.get(key));
+                    paramsJson.put(key,parameters.get(key));
                 }
+                appLaunchCacheManager.addString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId()+"-params",paramsJson.toString());
             }
-            //construct initialze url
-            String registrationUrl = URL + "apps/" + appLaunchConfig.getApplicationId() + "/users";
+            //construct registration url
+            String registrationUrl = appLaunchUrlBuilder.getAppRegistrationURL();
             //post the body to the server
-            sendPostRequest("initialize", registrationUrl, initJson, appLaunchResponseListener);
+            AppLaunchInternalListener appLaunchInternalListener = new AppLaunchInternalListener() {
+                @Override
+                public void onSuccess(AppLaunchResponse appLaunchResponse) {
+                    loadActions(appLaunchListener);
+                }
+
+                @Override
+                public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+                    appLaunchListener.onFailure(new AppLaunchFailResponse(ErrorCode.REGISTRATION_FAILURE,appLaunchFailResponse.getErrorMsg()));
+                }
+            };
+            if(updateUser){
+                sendPutRequest("initialize", registrationUrl, initJson, appLaunchInternalListener);
+            }else{
+                sendPostRequest("initialize", registrationUrl, initJson, appLaunchInternalListener);
+            }
+
         } else {
-            logger.error("EngageCore:initialize() - An error occured while initializing EngageCore service. Add a valid ClientSecret and AppSecret Value");
-            System.out.print("EngageCore:initialize() - An error occured while initializing EngageCore service. Add a valid ClientSecret and AppSecret Value");
-            throw new Exception("EngageCore:initialize() - An error occured while initializing EngageCore service. Add a valid ClientSecret and AppSecret Value", null);
+            logger.error("AppLaunchCore:initialize() - An error occured while initializing AppLaunchCore service. Add a valid ClientSecret and AppSecret Value");
+            System.out.print("AppLaunchCore:initialize() - An error occured while initializing AppLaunchCore service. Add a valid ClientSecret and AppSecret Value");
+            throw new Exception("AppLaunchCore:initialize() - An error occured while initializing AppLaunchCore service. Add a valid ClientSecret and AppSecret Value", null);
         }
     }
 
@@ -488,7 +492,8 @@ public class AppLaunch {
      * @param metrics
      */
     public void sendMetrics(ArrayList<String> metrics) {
-        String metricsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID()+ "/events/metrics?deviceId="+ AppLaunchUtils.getDeviceId();
+       // String metricsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID()+ "/events/metrics?deviceId="+ AppLaunchUtils.getDeviceId();
+        String metricsUrl = appLaunchUrlBuilder.getMetricsURL();
         try {
             JSONObject metricJson = AppLaunchUtils.getMetricJson();
             JSONArray jsonArray = new JSONArray();
@@ -500,10 +505,11 @@ public class AppLaunch {
             }
             metricJson.put("userId", appLaunchConfig.getUserID());
             metricJson.put("metricCodes",jsonArray);
-            sendPostRequest("SendMetrics", metricsUrl, metricJson, new AppLaunchResponseListener() {
+            sendPostRequest("SendMetrics", metricsUrl, metricJson, new AppLaunchInternalListener() {
                 @Override
                 public void onSuccess(AppLaunchResponse appLaunchResponse) {
-                    Log.d("sendMetricsSuccess", appLaunchResponse.getResponseText());
+
+                //    Log.d("sendMetricsSuccess", appLaunchResponse.getResponseJSON().toString());
                 }
 
                 @Override
@@ -524,6 +530,7 @@ public class AppLaunch {
                 for (int index = 0; index < features.length(); index++) {
                     JSONObject jsonObject = (JSONObject) features.get(index);
                     featureList.put(jsonObject.getString("code"), jsonObject);
+                    appLaunchCacheManager.addFeatureToCache(jsonObject);
                 }
             } catch (JSONException e) {
                 throw new RuntimeException(e.getMessage());
@@ -537,7 +544,7 @@ public class AppLaunch {
      */
     private void getFeatures(final AppLaunchResponseListener appLaunchResponseListener) {
         try {
-            if (null != appLaunchConfig && null != appLaunchConfig.getContext()) {
+            if (null != appLaunchConfig && null !=appContext) {
                 String featureUrl = ANALYZER_URL + "/actions/features";
                 Request getReq = new Request(featureUrl, Request.GET);
 
@@ -566,8 +573,8 @@ public class AppLaunch {
                     @Override
                     public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                         if (null != appLaunchResponseListener) {
-                            AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                            appLaunchResponseListener.onFailure(appLaunchFailResponse);
+                        //    AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
+                         //   appLaunchResponseListener.onFailure(appLaunchFailResponse);
                         }
                     }
                 });
@@ -585,7 +592,7 @@ public class AppLaunch {
     private void isFeatureEnabled(final String featureCode,final AppLaunchResponseListener appLaunchResponseListener) {
         try {
 
-            if (null != appLaunchConfig && null != appLaunchConfig.getContext() && null != featureCode && null!= appLaunchResponseListener) {
+            if (null != appLaunchConfig && null != appContext && null != featureCode && null!= appLaunchResponseListener) {
                 String featureUrl = ANALYZER_URL + "/actions/features";
                 Request getReq = new Request(featureUrl, Request.GET);
 
@@ -609,15 +616,15 @@ public class AppLaunch {
                             appLaunchResponseListener.onSuccess(new AppLaunchResponse());
 
                         } else {
-                            appLaunchResponseListener.onFailure(new AppLaunchFailResponse());
+                           // appLaunchResponseListener.onFailure(new AppLaunchFailResponse());
                         }
                     }
 
                     @Override
                     public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                         if (null != appLaunchResponseListener) {
-                            AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                            appLaunchResponseListener.onFailure(appLaunchFailResponse);
+                          //  AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
+                          //  appLaunchResponseListener.onFailure(appLaunchFailResponse);
                         }
                     }
                 });
@@ -640,7 +647,7 @@ public class AppLaunch {
 
 
 
-    private void sendPostRequest(final String methodName, String url, JSONObject body, final AppLaunchResponseListener appLaunchResponseListener) {
+    private void sendPostRequest(final String methodName, String url, JSONObject body, final AppLaunchInternalListener appLaunchListener) {
 
         Request postReq = new Request(url, Request.POST);
        // postReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
@@ -660,36 +667,71 @@ public class AppLaunch {
             public void onSuccess(Response response) {
                 Log.d("POST INVOKE FUNCTION::", response.getResponseText());
                 AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                appLaunchResponse.setResponseText(response.getResponseText());
-                if("initialize".equals(methodName) && sharedpreferences!=null){
-                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                if("initialize".equals(methodName) && appLaunchCacheManager!=null){
+                    appLaunchCacheManager.addString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
+                    /*SharedPreferences.Editor editor = sharedpreferences.edit();
                     editor.putString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
-                    editor.commit();
+                    editor.commit();*/
                 }
-                appLaunchResponseListener.onSuccess(appLaunchResponse);
+                appLaunchListener.onSuccess(appLaunchResponse);
                 //  responseListener.onSuccess("SUCCESS:: invoke function pushed");
+                try {
+                    appLaunchResponse.setResponseJSON(new JSONObject(response.getResponseText()));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
             public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                StringBuilder errorMessage = new StringBuilder();
-                if(response!=null)
-                    errorMessage.append(methodName + " :" + response.getResponseText());
-                if(t!=null){
-                    errorMessage.append(":").append(t.getMessage());
-                }
-                if(extendedInfo!=null){
-                    errorMessage.append(extendedInfo.toString());
-                }
-                appLaunchFailResponse.setErrorMsg(errorMessage.toString());
-                appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                Log.d("POST INVOKE FUNCTION:: ", methodName + " " + errorMessage.toString());
-                Log.d("Extended info:::", errorMessage.toString());
-                //  responseListener.onFailure("FAILURE:: invoke function push failed");
+                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse(ErrorCode.INTERNAL_ERROR,response.getResponseText());
+                appLaunchListener.onFailure(appLaunchFailResponse);
             }
         });
     }
+
+    private void sendPutRequest(final String methodName, String url, JSONObject body, final AppLaunchInternalListener appLaunchListener) {
+        Request putReq = new Request(url, Request.PUT);
+        // putReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
+
+        Map<String, List<String>> headers = new HashMap<>();
+        List<String> headerValues = new ArrayList<>();
+        headerValues.add("application/json");
+        headers.put("Content-Type", headerValues);
+        List<String> secretValues = new ArrayList<>();
+        secretValues.add(appLaunchConfig.getClientSecret());
+        headers.put("clientSecret", secretValues);
+        // headers.put("clientSecret",appLaunchConfig.getClientSecret());
+        putReq.setHeaders(headers);
+
+        putReq.send(appContext, body.toString(), new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                Log.d("POST INVOKE FUNCTION::", response.getResponseText());
+                AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
+                if("initialize".equals(methodName) && appLaunchCacheManager!=null){
+                    appLaunchCacheManager.addString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
+                    /*SharedPreferences.Editor editor = sharedpreferences.edit();
+                    editor.putString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
+                    editor.commit();*/
+                }
+                appLaunchListener.onSuccess(appLaunchResponse);
+                //  responseListener.onSuccess("SUCCESS:: invoke function pushed");
+                try {
+                    appLaunchResponse.setResponseJSON(new JSONObject(response.getResponseText()));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
+                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse(ErrorCode.INTERNAL_ERROR,response.getResponseText());
+                appLaunchListener.onFailure(appLaunchFailResponse);
+            }
+        });
+    }
+
 
 
     /**
@@ -755,15 +797,15 @@ public class AppLaunch {
                         JSONObject messageJson = new JSONObject(jsonResponse);
                         processInAppMessages(context,messageJson);
                     }catch (Exception ex){
-                        AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                        appLaunchFailResponse.setErrorMsg("Error parsing response: " + ex.getMessage());
+                     //   AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
+                      //  appLaunchFailResponse.setErrorMsg("Error parsing response: " + ex.getMessage());
                         //  engageResponseListener.onFailure(engageFailResponse);
-                        ex.printStackTrace();
+                     //   ex.printStackTrace();
                     }
 
                 }else{
                     AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                    appLaunchResponse.setResponseText(response.getResponseText());
+                 //   appLaunchResponse.setResponseText(response.getResponseText());
                     appLaunchResponseListener.onSuccess(appLaunchResponse);
                 }
             }
@@ -772,31 +814,40 @@ public class AppLaunch {
             public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                 if(response!=null){
                     Log.d("getMessages",response.getResponseText());
-                    AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                    appLaunchFailResponse.setErrorMsg(response.getResponseText());
-                    appLaunchResponseListener.onFailure(appLaunchFailResponse);
+                //    AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
+                //    appLaunchFailResponse.setErrorMsg(response.getResponseText());
+                //    appLaunchResponseListener.onFailure(appLaunchFailResponse);
                 }
             }
         });
     }
 
 
-    private void processInAppMessages(JSONObject messageJson){
-        if(messageJson!=null) {
+    private void processInAppMessages(JSONArray inAppMsgList){
+        if(inAppMsgList!=null) {
             try {
-                JSONArray inAppMsgList = messageJson.getJSONArray("inApp");
                 if (null != inAppMsgList && inAppMsgList.length() > 0) {
+                    messageList.clear();
                     for (int inappIndex = 0; inappIndex < inAppMsgList.length(); inappIndex++) {
                         JSONObject inappMessage = inAppMsgList.getJSONObject(inappIndex);
                         String layout = inappMessage.getString("layout");
                         if (MessageTypes.BANNER.equals(layout)) {
                             final MessageData messageData = new MessageData(MessageTypes.BANNER);
                             messageData.setTitle(inappMessage.getString("title"));
+                            messageData.setName(inappMessage.getString("name"));
                             messageData.setSubTitle(inappMessage.getString("subtitle"));
                             messageData.setImageUrl(inappMessage.getString("imageUrl"));
+                            if(inappMessage.has("triggers")){
+                                JSONArray triggerList = inappMessage.getJSONArray("triggers");
+                                for(int i=0; i<triggerList.length();i++){
+                                    JSONObject triggerObject = (JSONObject) triggerList.get(i);
+                                    String trigger =(String) triggerObject.get("action");
+                                    messageData.addTrigger(trigger);
+                                }
+                            }
                             //process the buttons
                             processButtons(messageData,inappMessage);
-                            messageList.add(messageData);
+                            messageList.put(messageData.getName(),messageData);
                         } else if (MessageTypes.TOP_SLICE.equals(layout)) {
 
                         } else if (MessageTypes.BOTTOM_PANEL.equals(layout)) {
@@ -805,10 +856,10 @@ public class AppLaunch {
                     }
                 }
             } catch (JSONException e) {
-                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                appLaunchFailResponse.setErrorMsg("Error parsing response: " + e.getMessage());
+              //  AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
+              //  appLaunchFailResponse.setErrorMsg("Error parsing response: " + e.getMessage());
                 //  engageResponseListener.onFailure(engageFailResponse);
-                e.printStackTrace();
+              //  e.printStackTrace();
             }
         }
     }
@@ -819,10 +870,53 @@ public class AppLaunch {
             {
                 public void run()
                 {
-                    for (MessageData messageData: messageList) {
-                        displayBannerDialog(context,messageData);
+                    Set<String> messageKeys= messageList.keySet();
+                    Iterator keys = messageKeys.iterator();
+                    while (keys.hasNext()){
+                        String key = (String) keys.next();
+                        MessageData messageData = messageList.get(key);
+                        ArrayList<String> triggerList = messageData.getTriggerList();
+                        Iterator triggerItr = triggerList.iterator();
+                        while(triggerItr.hasNext()) {
+                            String trigger = (String) triggerItr.next();
+                            switch (trigger) {
+                                case TRIGGER_EVERY_LAUNCH:
+                                    displayBannerDialog(context, messageList.get(key));
+                                    break;
+                                case TRIGGER_EVERY_ALTERNATE_LAUNCH:
+                                   boolean displayed= appLaunchCacheManager.getBoolean(messageData.getName()+trigger,false);
+                                    if(!displayed){
+                                        appLaunchCacheManager.addBoolean(messageData.getName()+trigger,true);
+                                        displayBannerDialog(context, messageList.get(key));
+                                    }else{
+                                        appLaunchCacheManager.addBoolean(messageData.getName()+trigger,false);
+                                    }
+                                    break;
+                                case TRIGGER_FIRST_LAUNCH:
+                                    long date = appLaunchCacheManager.getLong(messageData.getName(),0);
+                                    if(date!=0){
+                                        Date previousDisplayDate = new Date(date);
+                                        Date today = new Date();
+                                        try {
+                                            DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                                            previousDisplayDate = formatter.parse(formatter.format(previousDisplayDate));
+                                            today =  formatter.parse(formatter.format(today));
+                                            //if the dialog is not displayed earlier in the day proceed to display
+                                            if(previousDisplayDate.compareTo(today)!=0)
+                                                displayBannerDialog(context, messageList.get(key));
+                                        } catch (ParseException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    break;
+                                case TRIGGER_ONCE_AND_ONLY_ONCE:
+                                    if(!appLaunchCacheManager.getBoolean(messageData.getName()+"-displayed",false)){
+                                        displayBannerDialog(context, messageList.get(key));
+                                    }
+                                    break;
+                            }
+                        }
                     }
-
                 }
             });
         }
@@ -861,10 +955,10 @@ public class AppLaunch {
                     }
                 }
             } catch (JSONException e) {
-                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                appLaunchFailResponse.setErrorMsg("Error parsing response: " + e.getMessage());
+            //    AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
+            //    appLaunchFailResponse.setErrorMsg("Error parsing response: " + e.getMessage());
                 //  engageResponseListener.onFailure(engageFailResponse);
-                e.printStackTrace();
+            //    e.printStackTrace();
             }
         }
     }
@@ -879,7 +973,9 @@ public class AppLaunch {
                     ButtonData buttonData = new ButtonData();
                     buttonData.setButtonName(buttonObject.getString("name"));
                     buttonData.setAction(buttonObject.getString("action"));
-                    buttonData.setMetrics(buttonObject.getJSONArray("metrics"));
+                    if(buttonObject.has("metrics")){
+                        buttonData.setMetrics(buttonObject.getJSONArray("metrics"));
+                    }
                     messageData.addButton(buttonData);
                 }
             }
@@ -940,49 +1036,30 @@ public class AppLaunch {
                 public void onClick(View v) {
                     ButtonData buttonDataTag = (ButtonData) v.getTag();
                     JSONArray metricsList = buttonDataTag.getMetrics();
-                    ArrayList<String> metricCodes = new ArrayList<String>();
-                    for (int i = 0; i < metricsList.length(); i++) {
-                        try {
-                            JSONObject metricObject = (JSONObject) metricsList.get(i);
-                            metricCodes.add(metricObject.getString("code"));
-                        } catch (Exception ex) {
-                            ex.getMessage();
+                    if(metricsList!=null){
+                        ArrayList<String> metricCodes = new ArrayList<String>();
+                        for (int i = 0; i < metricsList.length(); i++) {
+                            try {
+                                JSONObject metricObject = (JSONObject) metricsList.get(i);
+                                metricCodes.add(metricObject.getString("code"));
+                            } catch (Exception ex) {
+                                ex.getMessage();
+                            }
                         }
+                        sendMetrics(metricCodes);
                     }
-                    sendMetrics(metricCodes);
                     dialog.dismiss();
                 }
             });
 
         }
         dialog.show();
+        appLaunchCacheManager.addLong(messageData.getName(),new Date().getTime());
+        appLaunchCacheManager.addBoolean(messageData.getName()+"-displayed",true);
     }
 
 
-
-    public void getJsonConfig(final AppLaunchResponseListener responseListener) {
-
-        // use bms core functionality to connect to db and fetch exiting config msgs for this user, if any...
-
-        Request getReq = new Request(URL + "captivateengine/jsonconfig", Request.GET);
-        getReq.setQueryParameter("OSType", userOSType);
-        getReq.setQueryParameter("locale", userLocale);
-        getReq.setQueryParameter("serviceInstanceId", appGUID);
-        getReq.setQueryParameter("deviceId", deviceId);
-        getReq.send(appContext, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                //  responseListener.onSuccess(response.getResponseText());
-            }
-
-            @Override
-            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                //  responseListener.onFailure(response.getResponseText());
-            }
-        });
-    }
-
-    public void updateUser(final AppLaunchResponseListener responseListener) {
+   /* public void updateUser(final AppLaunchResponseListener responseListener) {
 
         // use bms core functionality to connect to db and fetch exiting config msgs for this user, if any...
 
@@ -1002,9 +1079,9 @@ public class AppLaunch {
                 //  responseListener.onFailure(response.getResponseText());
             }
         });
-    }
+    }*/
 
-    public void putFunctionTrigger(final String functionName, final AppLaunchResponseListener responseListener) throws JSONException {
+  /*  public void putFunctionTrigger(final String functionName, final AppLaunchResponseListener responseListener) throws JSONException {
 
         Request postReq = new Request(URL + "buttonconfig", Request.POST);
 
@@ -1062,7 +1139,7 @@ public class AppLaunch {
 //                Log.d("GET INVOKE FUNCTION::", " failed to make GET call");
 //            }
 //        });
-    }
+    }*/
 
     public void showDialog(Context context) {
         LayoutInflater inflater = (LayoutInflater)appContext.getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -1070,5 +1147,28 @@ public class AppLaunch {
         AlertDialog.Builder adb = new AlertDialog.Builder(context);
         adb.setView(layout);
         adb.show();
+    }
+
+    // Setup a recurring alarm every half hour
+    public void scheduleAlarm() {
+        if(appContext!=null){
+            // Construct an intent that will execute the AlarmReceiver
+            Intent intent = new Intent(appContext, AppLaunchAlarmReceiver.class);
+            // Create a PendingIntent to be triggered when the alarm goes off
+            final PendingIntent pIntent = PendingIntent.getBroadcast(appContext, AppLaunchAlarmReceiver.REQUEST_CODE,
+                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            // Setup periodic alarm every every half hour from this point onwards
+            long firstMillis = System.currentTimeMillis(); // alarm is set right away
+            AlarmManager alarm = (AlarmManager) appContext.getSystemService(Context.ALARM_SERVICE);
+            // First parameter is the type: ELAPSED_REALTIME, ELAPSED_REALTIME_WAKEUP, RTC_WAKEUP
+            // Interval can be INTERVAL_FIFTEEN_MINUTES, INTERVAL_HALF_HOUR, INTERVAL_HOUR, INTERVAL_DAY
+            alarm.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    SystemClock.elapsedRealtime(),
+                    2*60*1000,pIntent);
+
+
+            //  alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, firstMillis,
+            //        AlarmManager.INTERVAL_FIFTEEN_MINUTES, pIntent);
+        }
     }
 }
