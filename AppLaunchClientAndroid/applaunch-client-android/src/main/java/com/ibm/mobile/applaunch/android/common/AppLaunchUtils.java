@@ -82,7 +82,6 @@ public class AppLaunchUtils {
             initObject.put("brand", getBrand());
             initObject.put("OSVersion", getOSVersion());
             initObject.put("platform", getPlatform());
-            initObject.put("deviceId", getDeviceId());
             initObject.put("appId", getPackageName(application));
             initObject.put("appVersion", "1.0.0");
             initObject.put("appName", getAppName(application));

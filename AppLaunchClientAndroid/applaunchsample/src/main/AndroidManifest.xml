@@ -19,6 +19,15 @@
             </intent-filter>
         </activity>
         <activity android:name=".PizzaDetailsActivity"></activity>
+
+        <receiver
+            android:name="com.ibm.mobile.applaunch.android.background.AppLaunchAlarmReceiver"
+            android:process=":remote" >
+        </receiver>
+
+        <service
+            android:name="com.ibm.mobile.applaunch.android.background.AppLaunchBackgroundService"
+            android:exported="false" />
     </application>
 
 </manifest>
