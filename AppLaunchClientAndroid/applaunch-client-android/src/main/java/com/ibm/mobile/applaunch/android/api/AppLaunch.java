@@ -71,7 +71,7 @@ import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.VALUES;
  * Created by norton on 7/21/17.
  */
 
-public class AppLaunchSDK {
+public class AppLaunch {
 
 
     public static final String PREFS_NAME = "com.ibm.mobile.services.engage";
@@ -93,24 +93,24 @@ public class AppLaunchSDK {
     private HashMap<String, JSONObject> featureList;
 
     private String actions=null;
-    protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + AppLaunchSDK.class.getSimpleName());
+    protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + AppLaunch.class.getSimpleName());
 
     private Application appContext = null;
 
     private HashMap<String,MessageData> messageList;
 
-    private static AppLaunchSDK thisInstance = null;
+    private static AppLaunch thisInstance = null;
 
-    private AppLaunchSDK() {
+    private AppLaunch() {
         super();
         featureList = new HashMap<>();
         messageList = new HashMap<>();
         appLaunchCacheManager = AppLaunchCacheManager.getInstance();
     }
 
-    public synchronized static AppLaunchSDK getInstance() {
+    public synchronized static AppLaunch getInstance() {
         if (thisInstance == null) {
-            thisInstance = new AppLaunchSDK();
+            thisInstance = new AppLaunch();
          }
         return thisInstance;
     }
