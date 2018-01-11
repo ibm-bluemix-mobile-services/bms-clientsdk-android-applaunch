@@ -65,4 +65,10 @@ public class AppLaunchAnalyticsDelegate implements AnalyticsDelegate {
     public String getAppName() {
         return AppLaunchAnalytics.getAppName();
     }
+
+    //@Override
+    public void logLocation() {
+
+    }
+
 }

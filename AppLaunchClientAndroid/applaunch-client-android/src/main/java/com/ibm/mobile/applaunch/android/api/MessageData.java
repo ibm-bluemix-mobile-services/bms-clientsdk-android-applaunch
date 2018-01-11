@@ -13,10 +13,13 @@ public class MessageData {
     private ArrayList<ButtonData> buttonDataList;
     private String metric;
     private String messageType;
+    private String name;
+    private ArrayList<String> triggerList;
 
     public MessageData(String messageTypes) {
         this.messageType = messageTypes;
         buttonDataList = new ArrayList<>();
+        triggerList = new ArrayList<>();
     }
 
     protected String getImageUrl() {
@@ -29,6 +32,14 @@ public class MessageData {
 
     protected String getTitle() {
         return title;
+    }
+
+    protected String getName() {
+        return name;
+    }
+
+    protected void setName(String name) {
+        this.name = name;
     }
 
     protected void setTitle(String title) {
@@ -51,4 +62,9 @@ public class MessageData {
         this.buttonDataList.add(buttonData);
     }
 
+    protected void addTrigger(String trigger){this.triggerList.add(trigger);}
+
+    public ArrayList<String> getTriggerList() {
+        return triggerList;
+    }
 }

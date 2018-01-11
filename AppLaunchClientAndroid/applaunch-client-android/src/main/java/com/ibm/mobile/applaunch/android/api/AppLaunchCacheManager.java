@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.util.Log;
 
+import com.ibm.mobile.applaunch.android.AppLaunchFailResponse;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,6 +26,7 @@ public class AppLaunchCacheManager {
     private static String SERVICE_NAME = "applaunch";
     private static final String APP_LAUNCH = "AppLaunch";
     private SharedPreferences sharedpreferences =null;
+    private Context context;
 
 
     private AppLaunchCacheManager() {
@@ -39,6 +42,7 @@ public class AppLaunchCacheManager {
     }
 
     protected void initializeCache(Context context){
+        this.context= context;
         sharedpreferences = context.getSharedPreferences(APP_LAUNCH, Context.MODE_PRIVATE);
     }
 
@@ -56,6 +60,14 @@ public class AppLaunchCacheManager {
         return defaultValue;
     }
 
+
+    protected long getLong(String key, long defaultValue){
+        if(key!=null){
+            return  sharedpreferences.getLong(key,defaultValue);
+        }
+        return defaultValue;
+    }
+
     /**
      * Add the string value to the local cache with the given key
      * @param key
@@ -64,6 +76,18 @@ public class AppLaunchCacheManager {
     protected void addString(String key, String value){
         SharedPreferences.Editor editor = getEditor();
         editor.putString(key,value);
+        editor.commit();
+    }
+
+
+    /**
+     * Add the string value to the local cache with the given key
+     * @param key
+     * @param value
+     */
+    protected void addLong(String key, long value){
+        SharedPreferences.Editor editor = getEditor();
+        editor.putLong(key,value);
         editor.commit();
     }
 
@@ -83,15 +107,20 @@ public class AppLaunchCacheManager {
         return sharedpreferences.edit();
     }
 
-    protected void loadDefaultFeatures(Context context) throws IOException, JSONException {
-        AssetManager assetManager = context.getAssets();
-        String[] files = assetManager.list("");
-        for (String file : files) {
-            Log.d("AppLaunchCacheManager",file);
-            if (file.toLowerCase().startsWith(SERVICE_NAME) && file.endsWith(EXTENSION)) {
-              JSONObject featureJson = getFeatureFromFile(assetManager.open(file));
-                addFeatureToCache(featureJson);
+    protected void loadDefaultFeatures(AppLaunchListener appLaunchListener)  {
+        try {
+            AssetManager assetManager = context.getAssets();
+            String[] files = assetManager.list("");
+            for (String file : files) {
+                Log.d("AppLaunchCacheManager", file);
+                if (file.toLowerCase().startsWith(SERVICE_NAME) && file.endsWith(EXTENSION)) {
+                    JSONObject featureJson = getFeatureFromFile(assetManager.open(file));
+                    addFeatureToCache(featureJson);
+                }
             }
+        }catch (Exception ex){
+            AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse(ErrorCode.DEFAULT_FEATURE_LOAD_FAILURE,"Failed to load error messages");
+            appLaunchListener.onFailure(appLaunchFailResponse);
         }
     }
 
