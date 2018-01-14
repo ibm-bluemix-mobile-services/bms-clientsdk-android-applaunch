@@ -46,7 +46,7 @@ public class HomeActivity extends AppCompatActivity implements AppLaunchListener
      //  AppLaunch.getInstance().initApp(getApplication(), BMSClient.REGION_US_SOUTH,"85720163-c9ca-4969-953e-9ef998464082","a9e5ad89-776d-4038-9c8a-ffd8734dcd15");
       //  AppLaunch.getInstance().initApp(getApplication(), BMSClient.REGION_US_SOUTH,"e134b9c0-7349-4a5f-b27a-278efa5c58d7","27a69ad4-bec9-4141-85c8-a4b37c0ef905");
 
-        AppLaunchConfig appLaunchConfig = new AppLaunchConfig.Builder().eventFlushInterval(10).cacheExpiration(10).fetchPolicy(RefreshPolicy.REFRESH_ON_EVERY_START).deviceId("f88ky8u").build();
+        AppLaunchConfig appLaunchConfig = new AppLaunchConfig.Builder().eventFlushInterval(10).cacheExpiration(1).fetchPolicy(RefreshPolicy.BACKGROUND_REFRESH).deviceId("f88ky8u").build();
         AppLaunchUser appLaunchUser = new AppLaunchUser.Builder().userId("norton").custom("test","newtest").build();
        AppLaunch.getInstance().init(getApplication(), ICRegion.US_SOUTH_STAGING,"852301c1-128e-4b11-80f5-9d113cdb976f","ecf53cdf-40ca-4239-9c49-15cdd88a36e7",appLaunchConfig,appLaunchUser,this);
 
