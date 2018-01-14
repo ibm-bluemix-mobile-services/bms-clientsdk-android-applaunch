@@ -5,8 +5,10 @@ import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.util.Log;
@@ -57,6 +59,7 @@ import static com.ibm.mobile.applaunch.android.R.id.buttonpanel;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_INVOKED;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_LAST_REFRESH;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_RECEIVED_RECEIVER;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ANALYZER_URL;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.CODE;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.INAPP_MESSAGES;
@@ -254,6 +257,11 @@ public class AppLaunch {
             if(timeLapsed>cacheExpirationTime){
                 refreshActions(appLaunchListener);
             }
+        }else if(RefreshPolicy.BACKGROUND_REFRESH.equals(appLaunchConfig.getRefreshPolicy())){
+           scheduleAlarm((int) appLaunchConfig.getCacheExpiration());
+            IntentFilter actionsReceivedIntent = new IntentFilter();
+            actionsReceivedIntent.addAction(ACTIONS_RECEIVED_RECEIVER);
+            appContext.registerReceiver(acionsReceiver,actionsReceivedIntent);
         }else{
             //return the cached actions response back since nothing has changed since the previous call
             try{
@@ -275,6 +283,24 @@ public class AppLaunch {
 
 
     }
+
+
+    private BroadcastReceiver acionsReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            refreshActions(new AppLaunchListener() {
+                @Override
+                public void onSuccess(AppLaunchResponse response) {
+                    Log.i("Refresh Successful",response.getResponseJSON().toString());
+                }
+
+                @Override
+                public void onFailure(AppLaunchFailResponse failResponse) {
+                    Log.i("Refresh Failure", failResponse.getErrorMsg());
+                }
+            });
+        }
+    };
 
     private void refreshActions(final AppLaunchListener appLaunchListener){
         getActions(new AppLaunchInternalListener() {
@@ -1150,7 +1176,7 @@ public class AppLaunch {
     }
 
     // Setup a recurring alarm every half hour
-    public void scheduleAlarm() {
+    public void scheduleAlarm(int timeInterval) {
         if(appContext!=null){
             // Construct an intent that will execute the AlarmReceiver
             Intent intent = new Intent(appContext, AppLaunchAlarmReceiver.class);
@@ -1164,11 +1190,7 @@ public class AppLaunch {
             // Interval can be INTERVAL_FIFTEEN_MINUTES, INTERVAL_HALF_HOUR, INTERVAL_HOUR, INTERVAL_DAY
             alarm.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
                     SystemClock.elapsedRealtime(),
-                    2*60*1000,pIntent);
-
-
-            //  alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, firstMillis,
-            //        AlarmManager.INTERVAL_FIFTEEN_MINUTES, pIntent);
+                    timeInterval*1000,pIntent);
         }
     }
 }

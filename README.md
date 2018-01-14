@@ -104,11 +104,22 @@ The AppLaunchConfig builder is used to customize the following:
 
 `fetchPolicy` : This parameter decides on how frequently the actions should be fetched from the server. The values can be one of the following:
 
- `RefreshPolicy.REFRESH_ON_EVERY_START`
+ 	`RefreshPolicy.REFRESH_ON_EVERY_START`
   
-  `RefreshPolicy.REFRESH_ON_EXPIRY`
+  	`RefreshPolicy.REFRESH_ON_EXPIRY`
  
-  `RefreshPolicy.BACKGROUND_REFRESH`
+  	`RefreshPolicy.BACKGROUND_REFRESH`
+  	
+  	To enable BACKGROUND_REFRESH include the following in the applications AndroidManifest.xml. 
+     <receiver
+            android:name="com.ibm.mobile.applaunch.android.background.AppLaunchAlarmReceiver"
+            android:process=":remote" >
+    </receiver>
+
+        <service
+            android:name="com.ibm.mobile.applaunch.android.background.AppLaunchBackgroundService"
+         android:exported="false"/>
+  
  
  `deviceId` : This parameter must be unique.
  
