@@ -44,4 +44,7 @@ public class AppLaunchConstants {
     public static final String PROPERTIES = "properties";
     public static final String CODE = "code";
     public static final String VALUES = "value";
+
+    //broadcast registration
+    public static final String ACTIONS_RECEIVED_RECEIVER = "com.applaunch.broadcast.action";
 }
