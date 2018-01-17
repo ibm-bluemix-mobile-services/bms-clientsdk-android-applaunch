@@ -88,7 +88,6 @@ public class AppLaunch {
    // private AppLaunchUser appLaunchUser;
 
     private AppLaunchCacheManager appLaunchCacheManager=null;
-    private boolean isInitialized = false;
     private AppLaunchResponseListener myListener;
     SharedPreferences prefs = null;
     private JSONArray features = null;
@@ -134,7 +133,7 @@ public class AppLaunch {
             appContext = context;
             //if app launch listener ==null create a dummy action listener
             if(appLaunchActionListener==null) {
-             appLaunchActionListener = new AppLaunchListener() {
+                appLaunchActionListener = new AppLaunchListener() {
                     @Override
                     public void onSuccess(AppLaunchResponse response) {
 
@@ -163,6 +162,36 @@ public class AppLaunch {
             registerDevice(user,appLaunchActionListener);
             //fetch actions from the server
 
+        }else{
+            throw new RuntimeException("Invalid Init paramters");
+        }
+    }
+
+    /**
+     *
+     * @param appLaunchListener
+     */
+    public void destroy(final AppLaunchListener appLaunchListener){
+        //TODO : Cache Clearing Mechanism and Check device is registered or not
+        if (appLaunchConfig != null && this.clientSecret != null) {
+            //send all the analytics event to the server
+            sendLogs();
+            //construct registration url
+            String registrationUrl = appLaunchUrlBuilder.getAppRegistrationURL();
+            //post the body to the server
+            AppLaunchInternalListener appLaunchInternalListener = new AppLaunchInternalListener() {
+                @Override
+                public void onSuccess(AppLaunchResponse appLaunchResponse) {
+                    // Clear all the cache
+
+                }
+
+                @Override
+                public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+                    appLaunchListener.onFailure(appLaunchFailResponse);
+                }
+            };
+            sendDeleteRequest(registrationUrl, appLaunchInternalListener);
         }else{
             throw new RuntimeException("Invalid Init paramters");
         }
@@ -753,6 +782,38 @@ public class AppLaunch {
             @Override
             public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                 AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse(ErrorCode.INTERNAL_ERROR,response.getResponseText());
+                appLaunchListener.onFailure(appLaunchFailResponse);
+            }
+        });
+    }
+
+    private void sendDeleteRequest(String url, final AppLaunchInternalListener appLaunchListener) {
+
+        Request postReq = new Request(url, Request.DELETE);
+        // postReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
+
+        Map<String, List<String>> headers = new HashMap<>();
+        List<String> secretValues = new ArrayList<>();
+        secretValues.add(appLaunchConfig.getClientSecret());
+        headers.put("clientSecret", secretValues);
+        postReq.setHeaders(headers);
+
+        postReq.send(appContext, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                Log.d("POST INVOKE FUNCTION::", response.getResponseText());
+                if(response.getStatus() == 202) {
+                    AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
+                    appLaunchListener.onSuccess(appLaunchResponse);
+                } else {
+                    AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse(ErrorCode.UNREGISTRATION_FAILURE,response.getResponseText());
+                    appLaunchListener.onFailure(appLaunchFailResponse);
+                }
+            }
+
+            @Override
+            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
+                AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse(ErrorCode.UNREGISTRATION_FAILURE,response.getResponseText());
                 appLaunchListener.onFailure(appLaunchFailResponse);
             }
         });
