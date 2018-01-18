@@ -46,6 +46,12 @@ public class AppLaunchCacheManager {
         sharedpreferences = context.getSharedPreferences(APP_LAUNCH, Context.MODE_PRIVATE);
     }
 
+    protected void destroyCache(){
+        SharedPreferences.Editor editor = getEditor();
+        editor.clear();
+        editor.commit();
+    }
+
     protected String getString(String key, String defaultValue){
         if(key!=null){
           return  sharedpreferences.getString(key,defaultValue);
