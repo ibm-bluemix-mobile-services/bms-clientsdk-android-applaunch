@@ -19,8 +19,9 @@ public class AppLaunchUrlBuilder {
     private static String EVENTS = "/events";
     private static String METRICS = "/metrics";
     private static String USERS = "/users";
-    private static String MOBILESERVICES = "https://mobileservices";
-    private static String APPLAUNCH_CONTEXT = "/applaunch/v1";
+    private static String MOBILESERVICES = "https://applaunch";
+    private static String APPLAUNCH_CONTEXT =  "/applaunch/v1";
+    
 
     public AppLaunchUrlBuilder(ICRegion region, String appID, String deviceID,String userId) {
         this.baseURL = MOBILESERVICES + region.toString() + APPLAUNCH_CONTEXT;
