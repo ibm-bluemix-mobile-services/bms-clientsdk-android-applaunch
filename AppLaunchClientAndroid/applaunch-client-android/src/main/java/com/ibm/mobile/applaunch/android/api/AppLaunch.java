@@ -173,7 +173,6 @@ public class AppLaunch {
      */
     public void destroy(final AppLaunchListener appLaunchListener){
         //TODO : Cache Clearing Mechanism and Check device is registered or not
-        if (appLaunchConfig != null && this.clientSecret != null) {
             //send all the analytics event to the server
             sendLogs();
             //construct registration url
@@ -183,7 +182,7 @@ public class AppLaunch {
                 @Override
                 public void onSuccess(AppLaunchResponse appLaunchResponse) {
                     // Clear all the cache
-
+                    appLaunchCacheManager.destroyCache();
                 }
 
                 @Override
@@ -191,10 +190,9 @@ public class AppLaunch {
                     appLaunchListener.onFailure(appLaunchFailResponse);
                 }
             };
-            sendDeleteRequest(registrationUrl, appLaunchInternalListener);
-        }else{
-            throw new RuntimeException("Invalid Init paramters");
-        }
+            if(appLaunchCacheManager.getString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),null)!=null){
+                sendDeleteRequest(registrationUrl, appLaunchInternalListener);
+            }
     }
 
 
