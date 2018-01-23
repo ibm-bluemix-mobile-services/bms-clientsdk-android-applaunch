@@ -31,6 +31,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.+'
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.ibm.mobilefirstplatform.clientsdk.android:core:[2.0.0,3.0.0)'
+   // compile 'com.ibm.mobilefirstplatform.clientsdk.android:core: 3.1.4'
     compile 'com.squareup.picasso:picasso:+'
     compile project (':applaunch-client-android')
     testCompile 'junit:junit:4.12'

@@ -74,7 +74,7 @@ To use the Bluemix App Launch SDK include the following:
     ```
     dependencies {
         ........
-        compile 'com.github.ibm-bluemix-mobile-services:bms-clientsdk-android-applaunch:0.0.1'
+        compile 'com.github.ibm-bluemix-mobile-services:bms-clientsdk-android-applaunch:0.0.5'
         compile 'com.ibm.mobilefirstplatform.clientsdk.android:core:[2.0.0,3.0.0)'
         .......
     }
