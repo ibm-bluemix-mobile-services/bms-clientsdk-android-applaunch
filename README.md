@@ -1,12 +1,14 @@
-IBM Bluemix App Launch Android SDK
+IBM Cloud Mobile Service - AppLaunch Android Client SDK
 ==========================================
 [![Build Status](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch.svg?branch=master)](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch)
 [![JitPack](https://img.shields.io/jitpack/v/jitpack/maven-simple.svg)](https://jitpack.io/#ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch)
 
 
-The [Bluemix App Launch service](https://console.stage1.bluemix.net/catalog/services/app-launch) App Launch service on Bluemix helps in controlled reach of app features. It provides a unified service to customize and personalize your applications to different audience with just few clicks.
+This Android SDK for App Launch on IBM Cloud services, provides a library for developers to build mobile applications on Android devices.
 
-Ensure that you go through [Bluemix App Launch service documentation](https://console-regional.ng.bluemix.net/docs/services/app-launch/index.html) before you start.
+>App Launch on IBM Cloud services enables the developers to build engaging apps by controlling reach and roll out of App features while measuring the defined metrics.
+
+Ensure that you go through [IBM Cloud App Launch service documentation](https://console-regional.ng.bluemix.net/docs/services/app-launch/index.html) before you start.
 
 ## Build Status
 
@@ -16,20 +18,21 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
 
 ## Contents
 - [Setup App Launch Service](#setup-app-launch-service)
-	 - [Creating the service](#creating-the-service)
-	 - [Creating a feature](#creating-a-feature)
-	 - [Creating an audience](#creating-an-audience)
-	 - [Creating an engagement](#creating-an-engagement)
+     - [Creating the service](#creating-the-service)
+     - [Creating a feature](#creating-a-feature)
+     - [Creating an audience](#creating-an-audience)
+     - [Creating an engagement](#creating-an-engagement)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Initialize SDK](#initialize-sdk)
-    - [Include client App Launch SDK](#include-client-app-launch-sdk)
-    - [Initialize](#initialize) 
+- [Enabling iOS applications to use IBM App Launch](#enabling-ios-applications-to-use-ibm-app-launch)
+    - [Import the App launch SDK in your code](#import-the-app-launch-sdk-in-your-code)
+    - [Initializing the AppLaunch SDK](#initializing-the-appLaunch-sdk)
 - [Feature Toggle](#feature-toggle)
-    - [Check if feature is enabled](#check-if-feature-is-enabled)
-    - [Get variable for feature](#get-variable-for-feature)
+    - [Check if feature is enabled](#feature-toggle)
+    - [Get variable for feature](#feature-toggle)
 - [Metrics](#metrics)
     - [Send Metrics](#send-metrics)
+- [Destroy](#destroy)
 - [Samples and videos](#samples-and-videos)
 
 ##Setup App Launch Service
@@ -53,11 +56,11 @@ Ensure that you go through [Bluemix App Launch service documentation](https://co
   either Android Studio or Gradle
 
 ## Installation
-## Initialize SDK
+The Android SDKs for IBM Cloud Mobile services is available via [JitPack](https://jitpack.io).
 
-### Include client App Launch SDK 
+### JitPack
 
-To use the Bluemix App Launch SDK include the following:
+To install Applaunch Android SDK using jitpack
 
 1. In the projects `build.gradle` file include:
 	```
@@ -79,36 +82,39 @@ To use the Bluemix App Launch SDK include the following:
         .......
     }
     ```
-3. Configure the `AndroidManifest.xml` file. Refer the [example here](https://github.ibm.com/Engage/bms-samples-android-helloengage/blob/master/PizzaDelivery/app/src/main/AndroidManifest.xml). Add the following permissions inside application's `AndroidManifest.xml` file. 
+3. Add the following permissions inside application's `AndroidManifest.xml` file. 
 
      ```
      <uses-permission android:name="android.permission.INTERNET"/>
      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
      <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-     ```
-     
-### Initialize
-A common place to put the initialization code is the`onCreate()`method of the `main activity` in your Android application: 
+     ```   
+    
+## Enabling Android applications to use IBM App Launch
 
-```
-// Initialize the SDK
-AppLaunchConfig appLaunchConfig = new AppLaunchConfig.Builder().eventFlushInterval(10).cacheExpiration(10).fetchPolicy(RefreshPolicy.REFRESH_ON_EVERY_START).deviceId("f88ky8u").build();
-AppLaunchUser appLaunchUser = new AppLaunchUser.Builder().userId("norton").custom("test","newtest").build();
-AppLaunch.getInstance().init(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret",appLaunchConfig,appLaunchUser,AppLaunchListener);
-```
+### Initializing the AppLaunch SDK
+A common place to put the initialization code is the`onCreate()` method of your Android application: 
 
+##### 1. Build Configuration Object
+```
+AppLaunchConfig appLaunchConfig = new AppLaunchConfig.Builder().eventFlushInterval(10).cacheExpiration(10).fetchPolicy(RefreshPolicy.REFRESH_ON_EVERY_START).deviceId("454dfidif0e-3r3434-3434343").build();
+```
 The AppLaunchConfig builder is used to customize the following:
-`eventFlushInterval` : Decides the time interval the events should be sent to the server. The default value is 30 minutes.
 
-`cacheExpiration` : Decides the time interval the actions should be valid for. On expiration time the actions are fetched from the server. This parameter has effect when the `RefreshPolicy` is set to `RefreshPolicy.REFRESH_ON_EXPIRY` or `RefreshPolicy.BACKGROUND_REFRESH`
+- `eventFlushInterval` : Sets/Decide the time interval on when the events should be sent to the server. The default value is 30 minutes.
 
-`fetchPolicy` : This parameter decides on how frequently the actions should be fetched from the server. The values can be one of the following:
+- `cacheExpiration` : Sets/Decide the time interval until when the actions should be valid for. The default value is 30 minutes. 
 
- 	`RefreshPolicy.REFRESH_ON_EVERY_START`
+	**Note** This parameter is effective only if the fetch policy is set to `RefreshPolicy.REFRESH_ON_EXPIRY` or `RefreshPolicy.BACKGROUND_REFRESH`
+
+
+- `fetchPolicy` : This parameter decides on how frequently the actions should be fetched from the server. The values can be one of the following:
+
+ 	-`RefreshPolicy.REFRESH_ON_EVERY_START`
   
-  	`RefreshPolicy.REFRESH_ON_EXPIRY`
+  	-`RefreshPolicy.REFRESH_ON_EXPIRY`
  
-  	`RefreshPolicy.BACKGROUND_REFRESH`
+  	-`RefreshPolicy.BACKGROUND_REFRESH`
   	
   	To enable BACKGROUND_REFRESH include the following in the applications AndroidManifest.xml. 
      <receiver
@@ -119,71 +125,80 @@ The AppLaunchConfig builder is used to customize the following:
         <service
             android:name="com.ibm.mobile.applaunch.android.background.AppLaunchBackgroundService"
          android:exported="false"/>
-  
+
+	The default value is `RefreshPolicy.REFRESH_ON_EVERY_START`.
+  	
+- `deviceId`: This parameter must be unique. If not specified, default deviceID generation mechanism is used by SDK.
  
- `deviceId` : This parameter must be unique.
- 
-  **Note:Do not rely on the default implementation of the device ID it is not guarenteed to be unique.**
+	**Note**: Do not rely on the default implementation of the deviceID generation  mechanism as it is not guarenteed to be unique.
+
+##### 2. Build User Object
+
+```
+AppLaunchUser appLaunchUser = new AppLaunchUser.Builder().userId("norton").custom("type","premium").build();
+```
 
 The AppLaunchUser builder is used to provide the following information:
 
-`userId`: The user to be registered
+- `userId`: The user to be registered
 
-`custom`: This can be used to pass any optional custom attributes. 
+- `custom`: This can be used to pass any optional custom user attributes. 
 
-Where `bluemixRegionSuffix` specifies the location where the app is hosted. You can use any of the following values:
+##### 3. Initialize App Launch SDK
 
-- `ICRegion.US_SOUTH_STAGING`
+```
+AppLaunch.getInstance().init(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret",appLaunchConfig,appLaunchUser,AppLaunchListener);
+```
+
+Where `region` parameter specifies the location where the app is hosted. You can use any of the following values:
+
 - `ICRegion.US_SOUTH`
+- `ICRegion.UNITED_KINGDOM`
+- `ICRegion.SYDNEY`
+- `ICRegion.US_SOUTH_STAGING`
+- `ICRegion.UNITED_KINGDOM_STAGING`
 
 The `appGUID` is the app launch app GUID value, while `clientSecret` is the appLaunch client secret value which can be obtained from the service console.
-
-**Note: initApp should be the first call in the application.**
      
-## Feature Toggle
+`AppLaunchListener` is the call back listener which will be used to notify in case of success and failure events. Pass the instance of the class implementing the AppLaunchListener interface.
 
-### Check if feature is enabled
+### Feature toggle
 
-Use the ` AppLaunch.getInstance().isFeatureEnabled()` API to check if a particular feature is enabled for the application. This api returns true if the feature is enable for the application else false.
+* Use the ```AppLaunch.sharedInstance.isFeatureEnabled(featureCode: "feature code")``` to check if the feature is enabled for the app.
+
+* Use the ```AppLaunch.sharedInstance.getPropertyofFeature(featureCode: "feature code", propertyCode: "property code")``` to get the value of the particular property in a feature.
 
 
-     AppLaunch.getInstance().isFeatureEnabled(featureCode)
- 
- **Note:Throws AppLaunchException if isFeatureEnabled is invoked before getActions() api.**    
-        
-### Get variable for feature
-Use the `AppLaunch.getInstance().getVariableForFeature()` to fetch the variable corresponding to a feature
+ **Note** :The above two APIs throws `AppLaunchException` exception if `isFeatureEnabled` or `getPropertyofFeature` is invoked before `init` API.  
 
-`AppLaunch.getInstance().getVariableForFeature("featurecode","variablecode");`
-`AppLaunch.getInstance().getStringVariableForFeature("featurecode","variablecode");`
-`AppLaunch.getInstance().getIntVariableForFeature("featurecode","variablecode");`
-`AppLaunch.getInstance().getBooleanVariableForFeature("featurecode","variablecode");`
-    
+### Metrics
 
-This api returns the varaible corresponding to the variable code for a particular feature.
-
- **Note:Throws AppLaunchException if getVariableForFeature is invoked before getActions() api.** 
-
-## Metrics
-
-### Send Metrics
-
-To send metrics to the server use the `AppLaunch.getInstance().sendMetrics();` api. This sends the metrics information to the server
+To send metrics to the server use the ```AppLaunch.sharedInstance.sendMetrics()``` API. This API call sends the metrics information to the server.
 
 ```
- AppLaunch.getInstance().sendMetrics("metriccode");
+ AppLaunch.getInstance().sendMetrics(ArrayList<String> metrics);
 ```
 
-## Samples and videos
+ **Note** : The above API throws `AppLaunchException` error if `sendMetrics` is invoked before `init` API.
 
-* For samples, visit - [Github Sample](https://github.com/ibm-bluemix-mobile-services/bms-samples-android-helloapplaunch)
+### Destroy
+
+This method unregisters the user from AppLaunch Service and clears the cache
+
+```
+AppLaunch.getInstance().destroy(AppLaunchListener)
+```
+
+### Samples and Videos
+
+* For samples, visit - [Github Sample](https://github.com/ibm-bluemix-mobile-services/bms-samples-swift-helloapplaunch)
 
 
-### Learning More
+### Learn More
 
-* Visit the **[Bluemix Developers Community](https://developer.ibm.com/bluemix/)**.
+* Visit the **[IBM Cloud Developers Community](https://developer.ibm.com/bluemix/)**.
 
-### Connect with Bluemix
+### Connect with IBM Cloud
 
 [Twitter](https://twitter.com/ibmbluemix)|
 [YouTube](https://www.youtube.com/watch?v=dQ1WcY_Ill4) |

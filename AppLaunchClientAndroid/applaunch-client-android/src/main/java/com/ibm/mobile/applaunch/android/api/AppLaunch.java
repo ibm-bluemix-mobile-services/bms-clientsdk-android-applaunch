@@ -416,7 +416,7 @@ public class AppLaunch {
                 }
                 return false;
             }
-            throw new AppLaunchException("Invoke getActions() api before isFeatureEnabled()");
+            throw new AppLaunchException("Invoke init() api before isFeatureEnabled()");
         }
         throw new AppLaunchException("init() api should be invoked as the first call in the application.");
     }
@@ -452,8 +452,9 @@ public class AppLaunch {
                     }
                 }
                 return returnValue;
-            }else{
-                throw new AppLaunchException("Invoke getActions() api before getPropertyOfFeature()");
+            }
+            else{
+                throw new AppLaunchException("Invoke init() api before getPropertyOfFeature()");
             }
         }
         throw new AppLaunchException("init() api should be invoked as the first call in the application.");
@@ -1238,7 +1239,7 @@ public class AppLaunch {
     }
 
     // Setup a recurring alarm every half hour
-    public void scheduleAlarm(int timeInterval) {
+    private void scheduleAlarm(int timeInterval) {
         if(appContext!=null){
             // Construct an intent that will execute the AlarmReceiver
             Intent intent = new Intent(appContext, AppLaunchAlarmReceiver.class);
