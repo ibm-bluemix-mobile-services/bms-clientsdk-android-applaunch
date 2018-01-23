@@ -21,10 +21,15 @@ public class AppLaunchUrlBuilder {
     private static String USERS = "/users";
     private static String MOBILESERVICES = "https://applaunch";
     private static String APPLAUNCH_CONTEXT =  "/applaunch/v1";
+    private static String MOBILESERVICES_DEV="https://mobileservices-dev.us-south.containers.mybluemix.net";
 
 
     public AppLaunchUrlBuilder(ICRegion region, String appID, String deviceID,String userId) {
-        this.baseURL = MOBILESERVICES + region.toString() + APPLAUNCH_CONTEXT;
+        if(region.equals(ICRegion.US_SOUTH_DEV)){
+            this.baseURL = MOBILESERVICES_DEV+APPLAUNCH_CONTEXT;
+        }else{
+            this.baseURL = MOBILESERVICES + region.toString() + APPLAUNCH_CONTEXT;
+        }
         this.applicationID = appID;
         this.deviceID = deviceID;
         this.userId = userId;

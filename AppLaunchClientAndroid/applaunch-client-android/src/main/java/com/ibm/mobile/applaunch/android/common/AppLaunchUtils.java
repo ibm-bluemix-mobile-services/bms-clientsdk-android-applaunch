@@ -78,13 +78,13 @@ public class AppLaunchUtils {
     public static JSONObject getInitJson(Application application) {
         JSONObject initObject = new JSONObject();
         try {
-            initObject.put("model", getModel());
-            initObject.put("brand", getBrand());
-            initObject.put("OSVersion", getOSVersion());
+          //  initObject.put("model", getModel());
+          //  initObject.put("brand", getBrand());
+         //   initObject.put("OSVersion", getOSVersion());
             initObject.put("platform", getPlatform());
-            initObject.put("appId", getPackageName(application));
-            initObject.put("appVersion", "1.0.0");
-            initObject.put("appName", getAppName(application));
+          //  initObject.put("appId", getPackageName(application));
+         //   initObject.put("appVersion", "1.0.0");
+         //   initObject.put("appName", getAppName(application));
         } catch (JSONException e) {
             initObject = null;
             logger.error("Error creating init json " + e.getMessage());
