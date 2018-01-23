@@ -506,9 +506,10 @@ public class AppLaunch {
                 Enumeration keys = parameters.keys();
                 while(keys.hasMoreElements()){
                     String key = (String) keys.nextElement();
-                    initJson.put(key,parameters.get(key));
+                   // initJson.put(key,parameters.get(key));
                     paramsJson.put(key,parameters.get(key));
                 }
+                initJson.put("attributes",paramsJson);
                 appLaunchCacheManager.addString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId()+"-params",paramsJson.toString());
             }
             //construct registration url
@@ -708,12 +709,14 @@ public class AppLaunch {
         Map<String, List<String>> headers = new HashMap<>();
         List<String> headerValues = new ArrayList<>();
         headerValues.add("application/json");
-        headers.put("Content-Type", headerValues);
+       // headerValues.add("application/json; charset = UTF-8");
+        headers.put("content-type", headerValues);
         List<String> secretValues = new ArrayList<>();
         secretValues.add(appLaunchConfig.getClientSecret());
         headers.put("clientSecret", secretValues);
        // headers.put("clientSecret",appLaunchConfig.getClientSecret());
         postReq.setHeaders(headers);
+
 
         postReq.send(appContext, body.toString(), new ResponseListener() {
             @Override

@@ -24,7 +24,7 @@ public enum ICRegion {
     UNITED_KINGDOM_DEV(".dev.eu-gb.bluemix.net"),
 
     SYDNEY_DEV(".dev.au-syd.bluemix.net");
-    
+
 
     private String region;
 
