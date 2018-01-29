@@ -32,6 +32,8 @@ Ensure that you go through [IBM Cloud App Launch service documentation](https://
     - [Get variable for feature](#feature-toggle)
 - [Metrics](#metrics)
     - [Send Metrics](#send-metrics)
+- [InApp Messages](#inappmessages)
+    - [Display InApp Messages](#display-inappmessages) 
 - [Destroy](#destroy)
 - [Samples and videos](#samples-and-videos)
 
@@ -180,6 +182,16 @@ To send metrics to the server use the ```AppLaunch.sharedInstance.sendMetrics()`
 ```
 
  **Note** : The above API throws `AppLaunchException` error if `sendMetrics` is invoked before `init` API.
+ 
+ 
+### InApp Messages
+To display InApp messages invoke the following api
+
+```
+ AppLaunch.getInstance().displayInAppMessages(context);
+```
+
+**Note** : Here the context is the Activities context.
 
 ### Destroy
 

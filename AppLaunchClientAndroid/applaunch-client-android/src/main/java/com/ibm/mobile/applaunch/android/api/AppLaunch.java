@@ -558,7 +558,7 @@ public class AppLaunch {
             for(String metric:metrics){
                 jsonArray.put(metric);
             }
-            metricJson.put("userId", appLaunchConfig.getUserID());
+        //    metricJson.put("userId", appLaunchConfig.getUserID());
             metricJson.put("metricCodes",jsonArray);
             sendPostRequest("SendMetrics", metricsUrl, metricJson, new AppLaunchInternalListener() {
                 @Override
