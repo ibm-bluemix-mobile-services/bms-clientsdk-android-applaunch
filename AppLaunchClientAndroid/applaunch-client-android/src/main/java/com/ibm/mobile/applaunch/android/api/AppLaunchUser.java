@@ -44,6 +44,16 @@ public class AppLaunchUser {
             return this;
         }
 
+        public Builder custom(String key, boolean value) {
+            parameters.put(key, value);
+            return this;
+        }
+
+        public Builder custom(String key, int value) {
+            parameters.put(key, value);
+            return this;
+        }
+
         public AppLaunchUser build() {
             return new AppLaunchUser(this);
         }

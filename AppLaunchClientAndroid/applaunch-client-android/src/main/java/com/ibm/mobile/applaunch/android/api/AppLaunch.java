@@ -550,7 +550,7 @@ public class AppLaunch {
        // String metricsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID()+ "/events/metrics?deviceId="+ AppLaunchUtils.getDeviceId();
         String metricsUrl = appLaunchUrlBuilder.getMetricsURL();
         try {
-            JSONObject metricJson = AppLaunchUtils.getMetricJson();
+            JSONObject metricJson = new JSONObject();
             JSONArray jsonArray = new JSONArray();
             if (metricJson == null|| metrics==null) {
                 throw new RuntimeException("Error creating Metrics payload");
