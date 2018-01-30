@@ -54,13 +54,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static android.content.Context.LAYOUT_INFLATER_SERVICE;
 import static com.ibm.mobile.applaunch.android.R.id.buttonpanel;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_INVOKED;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_LAST_REFRESH;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_RECEIVED_RECEIVER;
-import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ANALYZER_URL;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.CODE;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.INAPP_MESSAGES;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.PROPERTIES;
@@ -203,28 +201,6 @@ public class AppLaunch {
     }
 
 
-    /**
-     *
-     * @param userId
-     */
-    private void registerDevice(String userId){
-        if(userId==null)
-            throw new RuntimeException("AppLaunch:registerDevice() - userId cannot be null.", null);
-        registerDevice(userId,null,null);
-    }
-
-
-    /**
-     *
-     * @param userId
-     * @param parameters
-     */
-    private void registerDevice(String userId, Hashtable parameters){
-        if(userId==null|| parameters==null)
-            throw new RuntimeException("AppLaunch:registerDevice() - arguemnts cannot be null.", null);
-        registerDevice(userId,null,parameters);
-    }
-
 
     private void registerDevice(String userId, AppLaunchListener appLaunchListener, Hashtable parameters){
         try {
@@ -269,6 +245,10 @@ public class AppLaunch {
     }
 
 
+    /**
+     * Verify the Refresh policy of the actions and refresh the actions accordingly
+     * @param appLaunchListener
+     */
     private void loadActions(final AppLaunchListener appLaunchListener){
         //refresh actions on every start of the app
         if(RefreshPolicy.REFRESH_ON_EVERY_START.equals(appLaunchConfig.getRefreshPolicy())){
@@ -307,8 +287,6 @@ public class AppLaunch {
                 appLaunchListener.onFailure(applaunchFailResponse);
             }
         }
-
-
     }
 
 
@@ -329,6 +307,10 @@ public class AppLaunch {
         }
     };
 
+    /**
+     * Fetch the actions from the server
+     * @param appLaunchListener
+     */
     private void refreshActions(final AppLaunchListener appLaunchListener){
         getActions(new AppLaunchInternalListener() {
             @Override
@@ -345,10 +327,11 @@ public class AppLaunch {
     }
 
     /**
-     * @param appLaunchActions
+     * Invokes the server to fetch the actions
+     * @param appLaunchInternalListener
      */
-    private void getActions(final AppLaunchInternalListener appLaunchActions) {
-      if(appLaunchActions!=null){
+    private void getActions(final AppLaunchInternalListener appLaunchInternalListener) {
+      if(appLaunchInternalListener!=null){
           if (null != appLaunchConfig && null != appContext) {
 
              // String actionsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID() + "/actions?deviceId="+ AppLaunchUtils.getDeviceId();
@@ -377,8 +360,8 @@ public class AppLaunch {
                               processInAppMessages(messageArray);
                               AppLaunchResponse actionsResponse  = new AppLaunchResponse();
                               actionsResponse.setResponseJSON(actionsObject);
-                              appLaunchActions.onSuccess(actionsResponse);
-                            //  appLaunchActions.onFeaturesReceived(featuresArray.toString());
+                              appLaunchInternalListener.onSuccess(actionsResponse);
+                            //  appLaunchInternalListener.onFeaturesReceived(featuresArray.toString());
                           } catch (JSONException e) {
                               e.printStackTrace();
                           }
@@ -389,9 +372,9 @@ public class AppLaunch {
                   public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                       if(response!=null){
                           Log.d("getActions",response.getResponseText());
-                          appLaunchActions.onFailure(new AppLaunchFailResponse(ErrorCode.FETCH_ACTIONS_FAILURE,response.getResponseText()));
+                          appLaunchInternalListener.onFailure(new AppLaunchFailResponse(ErrorCode.FETCH_ACTIONS_FAILURE,response.getResponseText()));
                       }else{
-                          appLaunchActions.onFailure(new AppLaunchFailResponse(ErrorCode.FETCH_ACTIONS_FAILURE,"Error fetching actions"));
+                          appLaunchInternalListener.onFailure(new AppLaunchFailResponse(ErrorCode.FETCH_ACTIONS_FAILURE,"Error fetching actions"));
                       }
 
                   }
@@ -593,115 +576,13 @@ public class AppLaunch {
         }
     }
 
-
     /**
-     * @param appLaunchResponseListener
+     * Sends post request to the server
+     * @param methodName
+     * @param url
+     * @param body
+     * @param appLaunchListener
      */
-    private void getFeatures(final AppLaunchResponseListener appLaunchResponseListener) {
-        try {
-            if (null != appLaunchConfig && null !=appContext) {
-                String featureUrl = ANALYZER_URL + "/actions/features";
-                Request getReq = new Request(featureUrl, Request.GET);
-
-                getReq.send(appContext, new ResponseListener() {
-                    @Override
-                    public void onSuccess(Response response) {
-                        String featureString = response.getResponseText();
-                        if (null != featureString) {
-                            try {
-                                features = new JSONArray(featureString);
-                                featureList.clear();
-                                for (int index = 0; index < features.length(); index++) {
-                                    JSONObject jsonObject = (JSONObject) features.get(index);
-                                    featureList.put(jsonObject.getString("code"), jsonObject);
-                                }
-                            } catch (JSONException e) {
-                                throw new RuntimeException(e.getMessage());
-                            }
-                        }
-                        if(null!= appLaunchResponseListener){
-                            AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                            appLaunchResponseListener.onSuccess(appLaunchResponse);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                        if (null != appLaunchResponseListener) {
-                        //    AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                         //   appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                        }
-                    }
-                });
-            }
-        } catch (Exception ex) {
-            features = null;
-            logger.error("EngageCore:getFeatures() - An error occured fetching features.");
-        }
-    }
-
-
-    /**
-     * @param featureCode
-     */
-    private void isFeatureEnabled(final String featureCode,final AppLaunchResponseListener appLaunchResponseListener) {
-        try {
-
-            if (null != appLaunchConfig && null != appContext && null != featureCode && null!= appLaunchResponseListener) {
-                String featureUrl = ANALYZER_URL + "/actions/features";
-                Request getReq = new Request(featureUrl, Request.GET);
-
-                getReq.send(appContext, new ResponseListener() {
-                    @Override
-                    public void onSuccess(Response response) {
-                        String featureString = response.getResponseText();
-                        if (null != featureString) {
-                            try {
-                                features = new JSONArray(featureString);
-                                featureList.clear();
-                                for (int index = 0; index < features.length(); index++) {
-                                    JSONObject jsonObject = (JSONObject) features.get(index);
-                                    featureList.put(jsonObject.getString("code"), jsonObject);
-                                }
-                            } catch (JSONException e) {
-                                throw new RuntimeException(e.getMessage());
-                            }
-                        }
-                        if (featureList.containsKey(featureCode)) {
-                            appLaunchResponseListener.onSuccess(new AppLaunchResponse());
-
-                        } else {
-                           // appLaunchResponseListener.onFailure(new AppLaunchFailResponse());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                        if (null != appLaunchResponseListener) {
-                          //  AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                          //  appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                        }
-                    }
-                });
-            }
-
-        } catch (Exception ex) {
-            logger.error("EngageCore:isFeatureEnabled() - An error occured fetching features.");
-        }
-
-    }
-
-
-    private String getDeviceId() {
-        return deviceId;
-    }
-
-    private String getUserLocale() {
-        return userLocale;
-    }
-
-
-
     private void sendPostRequest(final String methodName, String url, JSONObject body, final AppLaunchInternalListener appLaunchListener) {
 
         Request postReq = new Request(url, Request.POST);
@@ -747,6 +628,13 @@ public class AppLaunch {
         });
     }
 
+    /**
+     * Sends put request to the server
+     * @param methodName
+     * @param url
+     * @param body
+     * @param appLaunchListener
+     */
     private void sendPutRequest(final String methodName, String url, JSONObject body, final AppLaunchInternalListener appLaunchListener) {
         Request putReq = new Request(url, Request.PUT);
         // putReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
@@ -789,6 +677,11 @@ public class AppLaunch {
         });
     }
 
+    /**
+     * Sends delete request to the server
+     * @param url
+     * @param appLaunchListener
+     */
     private void sendDeleteRequest(String url, final AppLaunchInternalListener appLaunchListener) {
 
         Request postReq = new Request(url, Request.DELETE);
@@ -817,96 +710,6 @@ public class AppLaunch {
             public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
                 AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse(ErrorCode.UNREGISTRATION_FAILURE,response.getResponseText());
                 appLaunchListener.onFailure(appLaunchFailResponse);
-            }
-        });
-    }
-
-
-
-    /**
-     * Get messages for the application
-     * @param context
-     * @param appLaunchResponseListener
-     */
-    private void getMessages(final Context context, final AppLaunchResponseListener appLaunchResponseListener){
-
-        String messageUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID()+"/actions/messages?deviceId="+ AppLaunchUtils.getDeviceId();
-        Request getReq = new Request(messageUrl, Request.GET);
-        getReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
-        getReq.send(appContext, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                Log.d("getMessages",response.getResponseText());
-                if(renderUi){
-                    try{
-                        String jsonResponse="{\n" +
-                                "  \"inApp\": [\n" +
-                                "  {\n" +
-                                "    \"name\": \"bannermessage\",\n" +
-                                "    \"layout\": \"banner\",\n" +
-                                "    \"title\": \"Hey there banner\",\n" +
-                                "    \"subtitle\": \"Welcome banner\",\n" +
-                                "    \"imageUrl\": \"https://goo.gl/bktLai\",\n" +
-                                "    \"customConfig\": {\n" +
-                                "      \"name\": \"voice\"\n" +
-                                "    },\n" +
-                                "    \"buttons\": [{\n" +
-                                "      \"name\": \"Ok\",\n" +
-                                "      \"action\": \"okaction\",\n" +
-                                "      \"metrics\": [\n" +
-                                "      {\n" +
-                                "        \"name\": \"bannermessage\",\n" +
-                                "        \"code\": \"0x45454\"\n" +
-                                "      }, \n" +
-                                "      {\n" +
-                                "        \"name\": \"message\",\n" +
-                                "        \"code\": \"0x45654\"\n" +
-                                "      }\n" +
-                                "      ]\n" +
-                                "    },{\n" +
-                                "      \"name\": \"Cancel\",\n" +
-                                "      \"action\": \"cancelaction\",\n" +
-                                "      \"metrics\": [\n" +
-                                "      {\n" +
-                                "        \"name\": \"cancelmessage\",\n" +
-                                "        \"code\": \"0x45454\"\n" +
-                                "      }, \n" +
-                                "      {\n" +
-                                "        \"name\": \"cancel\",\n" +
-                                "        \"code\": \"0x45654\"\n" +
-                                "      }\n" +
-                                "      ]\n" +
-                                "    }]\n" +
-                                "  }\n" +
-                                "  ],\n" +
-                                "  \"permissions\": [],\n" +
-                                "  \"carousel\": []\n" +
-                                "}";
-                   //     JSONObject messageJson = new JSONObject(response.getResponseText());
-                        JSONObject messageJson = new JSONObject(jsonResponse);
-                        processInAppMessages(context,messageJson);
-                    }catch (Exception ex){
-                     //   AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                      //  appLaunchFailResponse.setErrorMsg("Error parsing response: " + ex.getMessage());
-                        //  engageResponseListener.onFailure(engageFailResponse);
-                     //   ex.printStackTrace();
-                    }
-
-                }else{
-                    AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
-                 //   appLaunchResponse.setResponseText(response.getResponseText());
-                    appLaunchResponseListener.onSuccess(appLaunchResponse);
-                }
-            }
-
-            @Override
-            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                if(response!=null){
-                    Log.d("getMessages",response.getResponseText());
-                //    AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-                //    appLaunchFailResponse.setErrorMsg(response.getResponseText());
-                //    appLaunchResponseListener.onFailure(appLaunchFailResponse);
-                }
             }
         });
     }
@@ -1147,98 +950,7 @@ public class AppLaunch {
         appLaunchCacheManager.addBoolean(messageData.getName()+"-displayed",true);
     }
 
-
-   /* public void updateUser(final AppLaunchResponseListener responseListener) {
-
-        // use bms core functionality to connect to db and fetch exiting config msgs for this user, if any...
-
-        Request getReq = new Request(URL + "", Request.GET);
-        getReq.setQueryParameter("OSType", userOSType);
-        getReq.setQueryParameter("locale", userLocale);
-        getReq.setQueryParameter("serviceInstanceId", appGUID);
-        getReq.setQueryParameter("deviceId", deviceId);
-        getReq.send(appContext, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                // responseListener.onSuccess(response.getResponseText());
-            }
-
-            @Override
-            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                //  responseListener.onFailure(response.getResponseText());
-            }
-        });
-    }*/
-
-  /*  public void putFunctionTrigger(final String functionName, final AppLaunchResponseListener responseListener) throws JSONException {
-
-        Request postReq = new Request(URL + "buttonconfig", Request.POST);
-
-        Map<String, List<String>> headers = new HashMap<>();
-        List<String> headerValues = new ArrayList<>();
-        headerValues.add("application/json");
-
-        headers.put("Content-Type", headerValues);
-
-        postReq.setHeaders(headers);
-
-        JSONObject postObj = new JSONObject();
-        postObj.put("buttonName", functionName);
-        postObj.put("serviceInstanceId", appGUID);
-        postObj.put("buttonType", "invoke-function");
-        postObj.put("buttonValue", functionName);
-
-        postReq.send(appContext, postObj.toString(), new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                Log.d("POST INVOKE FUNCTION::", "pushed " + functionName + " invoke function");
-                //  responseListener.onSuccess("SUCCESS:: invoke function pushed");
-            }
-
-            @Override
-            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-                Log.d("POST INVOKE FUNCTION::", " failed to push " + functionName + " invoke function");
-                Log.d("Extended info:::", response.getResponseText());
-                Log.d("Extended info:::", t.getMessage());
-                Log.d("Extended info:::", extendedInfo.toString());
-                //  responseListener.onFailure("FAILURE:: invoke function push failed");
-            }
-        });
-//
-//        // use bms core functionality to connect to db and fetch exiting config msgs for this user, if any...
-//        Request getReq = new Request(URL+"buttonconfig", Request.GET);
-//        getReq.setQueryParameter("instanceid",serviceInstanceId);
-//        getReq.setQueryParameter("type","invoke-function");
-//        getReq.send(appContext, new ResponseListener() {
-//            @Override
-//            public void onSuccess(Response response) {
-//                try {
-//                    Log.d("sdk",response.getResponseText());
-//                    JSONArray obj = new JSONArray(response.getResponseText());
-//                    if(obj.length() == 0){
-//
-//                    }
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Response response, Throwable t, JSONObject extendedInfo) {
-//                Log.d("GET INVOKE FUNCTION::", " failed to make GET call");
-//            }
-//        });
-    }*/
-
-    public void showDialog(Context context) {
-        LayoutInflater inflater = (LayoutInflater)appContext.getSystemService(LAYOUT_INFLATER_SERVICE);
-        View layout = inflater.inflate(R.layout.custom_dialog, null);
-        AlertDialog.Builder adb = new AlertDialog.Builder(context);
-        adb.setView(layout);
-        adb.show();
-    }
-
-    // Setup a recurring alarm every half hour
+    // Setup a recurring alarm based on the timeout interval provided by the user
     private void scheduleAlarm(int timeInterval) {
         if(appContext!=null){
             // Construct an intent that will execute the AlarmReceiver
