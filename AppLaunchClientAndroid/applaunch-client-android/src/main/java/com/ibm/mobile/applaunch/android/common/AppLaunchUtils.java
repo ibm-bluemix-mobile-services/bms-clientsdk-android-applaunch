@@ -112,6 +112,16 @@ public class AppLaunchUtils {
     }
 
 
+    public boolean validateCustomParams(Object cachedValue, Object newValue){
+        boolean returnValue =false;
+        if(cachedValue instanceof String && newValue instanceof  String){
+            String currentValue = (String) cachedValue;
+
+        }
+        return returnValue;
+
+    }
+
 
     public static JSONObject getSessionJson(){
         JSONObject initObject = new JSONObject();

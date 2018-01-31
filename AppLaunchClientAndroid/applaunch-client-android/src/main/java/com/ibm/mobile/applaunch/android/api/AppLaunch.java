@@ -215,19 +215,17 @@ public class AppLaunch {
                     //if the user is an already registered user return the cached registration response
                     String registrationResponse = appLaunchCacheManager.getString(userId+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),"");
                     String cachedParams = appLaunchCacheManager.getString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId()+"-params","");
-                    boolean shouldUpdateUser=false;
                     JSONObject cachedParamJson = new JSONObject(cachedParams);
+                    JSONObject currentParamsJson = new JSONObject();
                     Enumeration paramKeys = parameters.keys();
                     while (paramKeys.hasMoreElements()){
                         String key = (String) paramKeys.nextElement();
-                        if(!cachedParamJson.has(key)){
-                            shouldUpdateUser = true;
-                            break;
-                        }
+                        currentParamsJson.put(key,parameters.get(key));
                     }
-                    if(shouldUpdateUser){
-                        register(appLaunchListener,parameters,true);
+                    //verify if the current parameters are different from the cached parameters
+                    if(!cachedParamJson.toString().equals(currentParamsJson.toString())){
                         //invoke update user request
+                        register(appLaunchListener,parameters,true);
                     }else{
                         loadActions(appLaunchListener);
                     }
@@ -471,7 +469,7 @@ public class AppLaunch {
     }
 
 
-    private void register(final AppLaunchListener appLaunchListener, Hashtable parameters,boolean updateUser) throws JSONException, Exception{
+    private void register(final AppLaunchListener appLaunchListener, Hashtable parameters, final boolean updateUser) throws JSONException, Exception{
         if (AppLaunchUtils.validateString(appLaunchConfig.getClientSecret()) && AppLaunchUtils.validateString(appLaunchConfig.getApplicationId()) && AppLaunchUtils.validateString(appLaunchConfig.getUserID())) {
             AppLaunchAnalytics.init(appContext, appLaunchConfig.getUserID(), "", appLaunchConfig.getClientSecret(), true, Analytics.DeviceEvent.ALL);
             this.clientSecret = appLaunchConfig.getClientSecret();
@@ -485,8 +483,8 @@ public class AppLaunch {
             }
             initJson.put("userId", appLaunchConfig.getUserID());
             initJson.put("deviceId", appLaunchConfig.getDeviceId());
+           final JSONObject paramsJson = new JSONObject();
             if(parameters!=null && parameters.size()>0){
-                JSONObject paramsJson = new JSONObject();
                 Enumeration keys = parameters.keys();
                 while(keys.hasMoreElements()){
                     String key = (String) keys.nextElement();
@@ -494,7 +492,6 @@ public class AppLaunch {
                     paramsJson.put(key,parameters.get(key));
                 }
                 initJson.put("attributes",paramsJson);
-                appLaunchCacheManager.addString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId()+"-params",paramsJson.toString());
             }
             //construct registration url
             String registrationUrl = appLaunchUrlBuilder.getAppRegistrationURL();
@@ -502,6 +499,8 @@ public class AppLaunch {
             AppLaunchInternalListener appLaunchInternalListener = new AppLaunchInternalListener() {
                 @Override
                 public void onSuccess(AppLaunchResponse appLaunchResponse) {
+                    if(updateUser)
+                        appLaunchCacheManager.addString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId()+"-params",paramsJson.toString());
                     loadActions(appLaunchListener);
                 }
 
