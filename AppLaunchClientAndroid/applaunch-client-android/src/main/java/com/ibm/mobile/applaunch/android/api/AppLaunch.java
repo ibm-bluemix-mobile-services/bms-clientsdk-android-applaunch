@@ -214,7 +214,7 @@ public class AppLaunch {
                 }else{
                     //if the user is an already registered user return the cached registration response
                     String registrationResponse = appLaunchCacheManager.getString(userId+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),"");
-                    String cachedParams = appLaunchCacheManager.getString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId()+"-params","");
+                    String cachedParams = appLaunchCacheManager.getString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId()+"-params","{}");
                     JSONObject cachedParamJson = new JSONObject(cachedParams);
                     JSONObject currentParamsJson = new JSONObject();
                     Enumeration paramKeys = parameters.keys();
