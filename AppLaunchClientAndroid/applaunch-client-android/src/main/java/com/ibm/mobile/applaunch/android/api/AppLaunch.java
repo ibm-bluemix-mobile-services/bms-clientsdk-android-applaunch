@@ -249,6 +249,7 @@ public class AppLaunch {
      */
     private void loadActions(final AppLaunchListener appLaunchListener){
         //refresh actions on every start of the app
+        cancelAlarm();
         if(RefreshPolicy.REFRESH_ON_EVERY_START.equals(appLaunchConfig.getRefreshPolicy())){
             refreshActions(appLaunchListener);
         }else if(RefreshPolicy.REFRESH_ON_EXPIRY.equals(appLaunchConfig.getRefreshPolicy())){
@@ -261,32 +262,39 @@ public class AppLaunch {
             long timeLapsed = currentTime.getTime()-lastRefresh.getTime();
             if(timeLapsed>cacheExpirationTime){
                 refreshActions(appLaunchListener);
+            }else{
+                returnCachedResponse(appLaunchListener);
             }
         }else if(RefreshPolicy.BACKGROUND_REFRESH.equals(appLaunchConfig.getRefreshPolicy())){
-           scheduleAlarm((int) appLaunchConfig.getCacheExpiration());
+            scheduleAlarm((int) appLaunchConfig.getCacheExpiration());
             IntentFilter actionsReceivedIntent = new IntentFilter();
             actionsReceivedIntent.addAction(ACTIONS_RECEIVED_RECEIVER);
             appContext.registerReceiver(acionsReceiver,actionsReceivedIntent);
+            returnCachedResponse(appLaunchListener);
         }else{
-            //return the cached actions response back since nothing has changed since the previous call
-            try{
-                //load inapp messages from cache into memory
-                String inappMessageString = appLaunchCacheManager.getString(INAPP_MESSAGES,"");
-                if(inappMessageString!=null && inappMessageString.length()>0){
-                    JSONArray inappMessageList = new JSONArray(inappMessageString);
-                    processInAppMessages(inappMessageList);
-                }
-                AppLaunchResponse actionsResponse = new AppLaunchResponse();
-                String cachedActionsResponse = appLaunchCacheManager.getString(ACTIONS,"");
-                actionsResponse.setResponseJSON(new JSONObject(cachedActionsResponse));
-                appLaunchListener.onSuccess(actionsResponse);
-            }catch (Exception ex){
-                AppLaunchFailResponse applaunchFailResponse = new AppLaunchFailResponse(ErrorCode.PROCESS_ACTIONS_FAILURE,ex.getMessage());
-                appLaunchListener.onFailure(applaunchFailResponse);
-            }
+            returnCachedResponse(appLaunchListener);
         }
     }
 
+
+    private void returnCachedResponse(AppLaunchListener appLaunchListener){
+        //return the cached actions response back since nothing has changed since the previous call
+        try{
+            //load inapp messages from cache into memory
+            String inappMessageString = appLaunchCacheManager.getString(INAPP_MESSAGES,"");
+            if(inappMessageString!=null && inappMessageString.length()>0){
+                JSONArray inappMessageList = new JSONArray(inappMessageString);
+                processInAppMessages(inappMessageList);
+            }
+            AppLaunchResponse actionsResponse = new AppLaunchResponse();
+            String cachedActionsResponse = appLaunchCacheManager.getString(ACTIONS,"");
+            actionsResponse.setResponseJSON(new JSONObject(cachedActionsResponse));
+            appLaunchListener.onSuccess(actionsResponse);
+        }catch (Exception ex){
+            AppLaunchFailResponse applaunchFailResponse = new AppLaunchFailResponse(ErrorCode.PROCESS_ACTIONS_FAILURE,ex.getMessage());
+            appLaunchListener.onFailure(applaunchFailResponse);
+        }
+    }
 
     private BroadcastReceiver acionsReceiver = new BroadcastReceiver() {
         @Override
@@ -494,7 +502,7 @@ public class AppLaunch {
                 initJson.put("attributes",paramsJson);
             }
             //construct registration url
-            String registrationUrl = appLaunchUrlBuilder.getAppRegistrationURL();
+         //   String registrationUrl = appLaunchUrlBuilder.getAppRegistrationURL();
             //post the body to the server
             AppLaunchInternalListener appLaunchInternalListener = new AppLaunchInternalListener() {
                 @Override
@@ -510,9 +518,10 @@ public class AppLaunch {
                 }
             };
             if(updateUser){
-                sendPutRequest("initialize", registrationUrl, initJson, appLaunchInternalListener);
+                initJson.remove("deviceId");
+                sendPutRequest("initialize",appLaunchUrlBuilder.getUpdateURL(), initJson, appLaunchInternalListener);
             }else{
-                sendPostRequest("initialize", registrationUrl, initJson, appLaunchInternalListener);
+                sendPostRequest("initialize",appLaunchUrlBuilder.getAppRegistrationURL(), initJson, appLaunchInternalListener);
             }
 
         } else {
@@ -903,7 +912,7 @@ public class AppLaunch {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         final AlertDialog dialog = builder.create();
         LayoutInflater inflater = (LayoutInflater) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
-        View dialogLayout = inflater.inflate(R.layout.banner_dialog_layout, null);
+        View dialogLayout = inflater.inflate(R.layout.banner_dialog_layout_new, null);
         dialog.setView(dialogLayout);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         ImageView image = (ImageView) dialogLayout.findViewById(R.id.goProDialogImage);
@@ -917,8 +926,10 @@ public class AppLaunch {
         for(ButtonData buttonData : buttonDataList) {
             Button dialogButton = new Button(context);
             LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            p.setMargins(5,5,5,5);
             p.weight = 1;
             dialogButton.setLayoutParams(p);
+            dialogButton.setBackgroundResource(R.drawable.button_background_dark);
             buttonPanel.addView(dialogButton);
             dialogButton.setTag(buttonData);
             dialogButton.setText(buttonData.getButtonName());
@@ -948,6 +959,18 @@ public class AppLaunch {
         appLaunchCacheManager.addLong(messageData.getName(),new Date().getTime());
         appLaunchCacheManager.addBoolean(messageData.getName()+"-displayed",true);
     }
+
+
+    private void cancelAlarm(){
+        Intent intent = new Intent(appContext, AppLaunchAlarmReceiver.class);
+        AlarmManager alarm = (AlarmManager) appContext.getSystemService(Context.ALARM_SERVICE);
+        final PendingIntent pIntent = PendingIntent.getBroadcast(appContext, AppLaunchAlarmReceiver.REQUEST_CODE,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (alarm!= null) {
+            alarm.cancel(pIntent);
+        }
+    }
+
 
     // Setup a recurring alarm based on the timeout interval provided by the user
     private void scheduleAlarm(int timeInterval) {

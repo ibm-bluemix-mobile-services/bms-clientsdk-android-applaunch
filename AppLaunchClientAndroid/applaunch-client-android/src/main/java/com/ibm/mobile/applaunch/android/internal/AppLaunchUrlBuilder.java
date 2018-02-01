@@ -52,6 +52,12 @@ public class AppLaunchUrlBuilder {
         return getAppRegistrationURL() + FORWARDSLASH + deviceID + ACTIONS;
     }
 
+
+    public String getUpdateURL() {
+        return getAppRegistrationURL() + FORWARDSLASH + deviceID;
+    }
+
+
     public String getMetricsURL() {
         return getAppRegistrationURL() + FORWARDSLASH + deviceID + EVENTS + METRICS;
     }
