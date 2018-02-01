@@ -82,7 +82,8 @@ public class HomeActivity extends AppCompatActivity implements AppLaunchListener
     @Override
     public void onSuccess(AppLaunchResponse response) {
         Log.i("onSuccess",response.getResponseJSON().toString());
-        AppLaunch.getInstance().displayInAppMessages(HomeActivity.this);
+      //  AppLaunch.getInstance().displayInAppMessages(HomeActivity.this);
+        AppLaunch.getInstance().destroy(this);
     }
 
     @Override

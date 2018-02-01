@@ -170,11 +170,10 @@ public class AppLaunch {
      * @param appLaunchListener
      */
     public void destroy(final AppLaunchListener appLaunchListener){
-        //TODO : Cache Clearing Mechanism and Check device is registered or not
+            //stop any background refresh
+            cancelAlarm();
             //send all the analytics event to the server
             sendLogs();
-            //construct registration url
-            String registrationUrl = appLaunchUrlBuilder.getAppRegistrationURL();
             //post the body to the server
             AppLaunchInternalListener appLaunchInternalListener = new AppLaunchInternalListener() {
                 @Override
@@ -189,7 +188,7 @@ public class AppLaunch {
                 }
             };
             if(appLaunchCacheManager.getString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),null)!=null){
-                sendDeleteRequest(registrationUrl, appLaunchInternalListener);
+                sendDeleteRequest(appLaunchUrlBuilder.getUnregisterURL(), appLaunchInternalListener);
             }
     }
 
