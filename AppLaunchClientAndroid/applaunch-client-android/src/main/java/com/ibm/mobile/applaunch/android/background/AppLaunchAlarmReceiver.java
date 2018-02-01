@@ -16,7 +16,6 @@ public class AppLaunchAlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Intent i = new Intent(context, AppLaunchBackgroundService.class);
-        i.putExtra("foo", "bar");
         context.startService(i);
     }
 }
