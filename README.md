@@ -1,7 +1,7 @@
 IBM Cloud Mobile Service - AppLaunch Android Client SDK
 ==========================================
 [![Build Status](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch.svg?branch=master)](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch)
-[![JitPack](https://img.shields.io/jitpack/v/jitpack/maven-simple.svg)](https://jitpack.io/#ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch)
+[![JitPack](https://jitpack.io/v/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch.svg)](https://jitpack.io/#ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch)
 
 
 This Android SDK for App Launch on IBM Cloud services, provides a library for developers to build mobile applications on Android devices.
