@@ -21,8 +21,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.ibm.mobile.applaunch.android.AppLaunchFailResponse;
-import com.ibm.mobile.applaunch.android.AppLaunchResponse;
+import com.ibm.mobile.applaunch.android.api.AppLaunchFailResponse;
+import com.ibm.mobile.applaunch.android.api.AppLaunchResponse;
 import com.ibm.mobile.applaunch.android.api.AppLaunch;
 import com.ibm.mobile.applaunch.android.api.AppLaunchConfig;
 import com.ibm.mobile.applaunch.android.api.AppLaunchListener;
@@ -63,7 +63,7 @@ public class HomeActivity extends AppCompatActivity implements AppLaunchListener
         AppLaunchUser appLaunchUser = new AppLaunchUser.Builder().userId("norton").custom("test","newtest").build();
     //    AppLaunchUser appLaunchUser = new AppLaunchUser.Builder().userId("norton").build();
       // AppLaunch.getInstance().init(getApplication(), ICRegion.US_SOUTH_STAGING,"852301c1-128e-4b11-80f5-9d113cdb976f","ecf53cdf-40ca-4239-9c49-15cdd88a36e7",appLaunchConfig,appLaunchUser,this);
-        AppLaunch.getInstance().init(getApplication(), ICRegion.US_SOUTH,"d28481fc-948b-44ff-9e75-e637fa3fbaf3","6e113b79-cbfe-458d-8fd8-4840547b3241",appLaunchConfig,appLaunchUser,this);
+        AppLaunch.getInstance().initialize(getApplication(), ICRegion.US_SOUTH,"d28481fc-948b-44ff-9e75-e637fa3fbaf3","6e113b79-cbfe-458d-8fd8-4840547b3241",appLaunchConfig,appLaunchUser,this);
 
 
 

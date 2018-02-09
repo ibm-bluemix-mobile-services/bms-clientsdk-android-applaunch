@@ -11,8 +11,9 @@
  *     limitations under the License.
  */
 
-package com.ibm.mobile.applaunch.android;
+package com.ibm.mobile.applaunch.android.api;
 
+import com.ibm.mobile.applaunch.android.api.AppLaunchFailResponse;
 import com.ibm.mobilefirstplatform.clientsdk.android.logger.api.Logger;
 
 import org.json.JSONObject;
@@ -21,6 +22,10 @@ import org.json.JSONObject;
  * Created by norton on 7/26/17.
  */
 
+/**
+ This is the Success Response class in the AppLaunch.
+ It is used to handle the success responses from the AppLaunch REST API calls.
+ */
 public class AppLaunchResponse {
 
     protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + AppLaunchFailResponse.class.getSimpleName());
@@ -32,6 +37,12 @@ public class AppLaunchResponse {
         super();
     }
 
+    /**
+
+     This Methode returns the response JSON for the AppLaunch calling API
+
+     - returns: responseJSON: This returns the Engagements JSON from the AppLaunch Service
+     */
     public JSONObject getResponseJSON() {
         return responseJSON;
     }

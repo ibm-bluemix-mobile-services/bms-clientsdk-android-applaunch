@@ -19,7 +19,7 @@ import java.util.ArrayList;
  * Created by norton on 9/17/17.
  */
 
-public class MessageData {
+ class MessageData {
     private String imageUrl;
     private String title;
     private String subTitle;

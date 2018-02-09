@@ -13,16 +13,26 @@
 
 package com.ibm.mobile.applaunch.android.api;
 
-import com.ibm.mobile.applaunch.android.AppLaunchFailResponse;
-import com.ibm.mobile.applaunch.android.AppLaunchResponse;
-
 /**
  * Created by norton on 9/22/17.
  */
 
+/**
+ * This is the callback for AppLaunch SDK APIs.
+ */
 public interface AppLaunchListener {
 
-
+    /**
+     * This method executes during the success scenario.
+     *
+     * @param response AppLaunchResponse Object
+     */
     public void onSuccess(AppLaunchResponse response);
+
+    /**
+     * This method executes during the failure scenario.
+     *
+     * @param failResponse AppLaunchFailResponse Object
+     */
     public void onFailure(AppLaunchFailResponse failResponse);
 }

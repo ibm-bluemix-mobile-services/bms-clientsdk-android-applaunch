@@ -17,7 +17,7 @@ package com.ibm.mobile.applaunch.android.api;
  * Created by norton on 9/15/17.
  */
 
-public interface MessageTypes {
+ interface MessageTypes {
 
     public static String BANNER="banner";
     public static String TOP_SLICE="topSlice";

@@ -38,6 +38,5 @@ public class AppLaunchBackgroundService extends IntentService {
         Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(AppLaunchConstants.ACTIONS_RECEIVED_RECEIVER);
         sendBroadcast(broadcastIntent);
-      //  AppLaunch.getInstance().
     }
 }

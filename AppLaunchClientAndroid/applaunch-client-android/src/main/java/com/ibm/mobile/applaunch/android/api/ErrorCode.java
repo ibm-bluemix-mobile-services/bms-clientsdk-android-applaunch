@@ -17,18 +17,39 @@ package com.ibm.mobile.applaunch.android.api;
  * Created by norton on 1/3/18.
  */
 
+/**
+ * ErrorCode is an enumerator which contains error information.
+ */
 public enum ErrorCode {
 
+    /**
+     * Internal Error in the SDK.
+     */
     INTERNAL_ERROR(-1),
 
+    /**
+     * Failed to register with Applaunch Service.
+     */
     REGISTRATION_FAILURE(0),
 
+    /**
+     * Failed to retreive engagements from Applaunch Service.
+     */
     FETCH_ACTIONS_FAILURE(1),
 
+    /**
+     * Failed to process engagements from Applaunch Service.
+     */
     PROCESS_ACTIONS_FAILURE(1),
 
+    /**
+     * Failed to load default features from Application.
+     */
     DEFAULT_FEATURE_LOAD_FAILURE(3),
 
+    /**
+     * Failed to unregister with Applaunch Service.
+     */
     UNREGISTRATION_FAILURE(4);
 
     private int error_code;
