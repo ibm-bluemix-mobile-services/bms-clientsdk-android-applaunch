@@ -10,20 +10,25 @@
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
  */
-<<<<<<< HEAD
-=======
 
-package com.ibm.mobile.applaunch.android.api;
->>>>>>> master
-
-package com.ibm.mobile.applaunch.android.api;
-
+package com.ibm.mobile.applaunch.android.actions;
 
 /**
- * Created by norton on 7/25/17.
+ * Created by norton on 10/26/17.
  */
 
-interface AppLaunchInternalListener {
-     void onSuccess(AppLaunchResponse appLaunchResponse);
-     void onFailure(AppLaunchFailResponse appLaunchFailResponse);
+public class Actions {
+
+    public static Actions thisInstance =null;
+
+    private Actions() {
+    }
+
+    public static Actions getInstance(){
+        if(thisInstance==null){
+            thisInstance = new Actions();
+        }
+        return  thisInstance;
+    }
+
 }

@@ -10,20 +10,38 @@
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
  */
-<<<<<<< HEAD
-=======
-
-package com.ibm.mobile.applaunch.android.api;
->>>>>>> master
 
 package com.ibm.mobile.applaunch.android.api;
 
+import java.util.Hashtable;
 
 /**
- * Created by norton on 7/25/17.
+ * Created by norton on 9/23/17.
  */
 
-interface AppLaunchInternalListener {
-     void onSuccess(AppLaunchResponse appLaunchResponse);
-     void onFailure(AppLaunchFailResponse appLaunchFailResponse);
+public class AppLaunchParameters {
+
+    private Hashtable paramters;
+
+    public AppLaunchParameters() {
+        paramters = new Hashtable<>();
+     }
+
+    public void put(String key,String value){
+        paramters.put(key,value);
+    }
+
+    public void put(String key,boolean value){
+        paramters.put(key,String.valueOf(value));
+    }
+
+
+    public void put(String key,int value){
+        paramters.put(key,String.valueOf(value));
+    }
+
+    protected Hashtable getParameters(){
+        return paramters;
+    }
+
 }

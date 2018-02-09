@@ -10,20 +10,33 @@
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
  */
-<<<<<<< HEAD
-=======
 
-package com.ibm.mobile.applaunch.android.api;
->>>>>>> master
+package com.ibm.mobile.applaunch.android;
 
-package com.ibm.mobile.applaunch.android.api;
+import com.ibm.mobilefirstplatform.clientsdk.android.logger.api.Logger;
 
+import org.json.JSONObject;
 
 /**
- * Created by norton on 7/25/17.
+ * Created by norton on 7/26/17.
  */
 
-interface AppLaunchInternalListener {
-     void onSuccess(AppLaunchResponse appLaunchResponse);
-     void onFailure(AppLaunchFailResponse appLaunchFailResponse);
+public class AppLaunchResponse {
+
+    protected static Logger logger = Logger.getLogger(Logger.INTERNAL_PREFIX + AppLaunchFailResponse.class.getSimpleName());
+
+    private JSONObject responseJSON;
+
+
+    public AppLaunchResponse() {
+        super();
+    }
+
+    public JSONObject getResponseJSON() {
+        return responseJSON;
+    }
+
+    public void setResponseJSON(JSONObject responseJSON) {
+        this.responseJSON = responseJSON;
+    }
 }

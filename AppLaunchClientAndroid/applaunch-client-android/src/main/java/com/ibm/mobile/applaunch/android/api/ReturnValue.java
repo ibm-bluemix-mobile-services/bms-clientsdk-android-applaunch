@@ -10,20 +10,26 @@
  *     See the License for the specific language governing permissions and
  *     limitations under the License.
  */
-<<<<<<< HEAD
-=======
 
 package com.ibm.mobile.applaunch.android.api;
->>>>>>> master
-
-package com.ibm.mobile.applaunch.android.api;
-
 
 /**
- * Created by norton on 7/25/17.
+ * Created by norton on 8/4/17.
  */
 
-interface AppLaunchInternalListener {
-     void onSuccess(AppLaunchResponse appLaunchResponse);
-     void onFailure(AppLaunchFailResponse appLaunchFailResponse);
+class ReturnValue {
+
+    private boolean returnValue;
+
+    protected ReturnValue() {
+        super();
+    }
+
+    protected boolean returnValue() {
+        return returnValue;
+    }
+
+    protected void setReturnValue(boolean returnValue) {
+        this.returnValue = returnValue;
+    }
 }
