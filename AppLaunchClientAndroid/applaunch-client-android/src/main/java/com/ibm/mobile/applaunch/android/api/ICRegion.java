@@ -17,6 +17,10 @@ package com.ibm.mobile.applaunch.android.api;
  * Created by norton on 1/2/18.
  */
 
+
+/**
+ *  ICRegion is an enumerator which can be used to specify IBM Cloud region where AppLaunch Service is hosted.
+ */
 public enum ICRegion {
 
 

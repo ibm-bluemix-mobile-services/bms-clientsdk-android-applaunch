@@ -17,12 +17,24 @@ package com.ibm.mobile.applaunch.android.api;
  * Created by norton on 1/2/18.
  */
 
+/**
+ * RefreshPolicy is an enumerator which can be used to specify on how frequently the engagements should be fetched from the server.
+ */
 public enum RefreshPolicy {
 
+    /**
+     * Loads engagements from server on every start of the application.
+     */
     REFRESH_ON_EVERY_START(0),
 
+    /**
+     * Loads engagements from server only if previous engagement is expired.
+     */
     REFRESH_ON_EXPIRY(1),
 
+    /**
+     * Loads engagements from server whenever previous engagement is expired.
+     */
     BACKGROUND_REFRESH(2);
 
     private int refresh_policy;

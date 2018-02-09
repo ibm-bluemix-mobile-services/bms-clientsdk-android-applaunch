@@ -11,15 +11,18 @@
  *     limitations under the License.
  */
 
-package com.ibm.mobile.applaunch.android;
+package com.ibm.mobile.applaunch.android.api;
 
-import com.ibm.mobile.applaunch.android.api.ErrorCode;
 import com.ibm.mobilefirstplatform.clientsdk.android.logger.api.Logger;
 
 /**
  * Created by norton on 7/26/17.
  */
 
+/**
+ * This is the Failure Response class in the AppLaunch.
+ * This can used to handle the failure responses from the AppLaunch REST API calls.
+ */
 public class AppLaunchFailResponse {
 
 
@@ -31,16 +34,32 @@ public class AppLaunchFailResponse {
     private ErrorCode errorCode;
     private String errorMsg;
 
-
+    /**
+     * This method will initialize the AppLaunchFailResponse with Error Code and Error Message.
+     *
+     * @param errorCode     This is Error Code value
+     * @param errorMsg      This is Error Message value
+     */
     public AppLaunchFailResponse(ErrorCode errorCode,String errorMsg) {
         this.errorCode = errorCode;
         this.errorMsg = errorMsg;
     }
 
+
+    /**
+     * This Methode returns the error code for the AppLaunch calling API.
+     *
+     * @return errorCode: This returns the error code value from the AppLaunch Service.
+     */
     public ErrorCode getErrorCode() {
         return errorCode;
     }
 
+    /**
+     * This Methode returns the error message for the AppLaunch calling API.
+     *
+     * @return errorMessage: This returns the error message value from the AppLaunch Service.
+     */
     public String getErrorMsg() {
         return errorMsg;
     }

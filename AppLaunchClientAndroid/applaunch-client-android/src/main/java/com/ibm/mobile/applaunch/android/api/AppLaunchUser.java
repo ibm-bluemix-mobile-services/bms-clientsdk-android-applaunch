@@ -19,6 +19,10 @@ import java.util.Hashtable;
  * Created by norton on 12/29/17.
  */
 
+
+/**
+ * AppLaunchUser contains user information which is used by AppLaunch APIs.
+ */
 public class AppLaunchUser {
 
     private String userId;
@@ -30,43 +34,79 @@ public class AppLaunchUser {
         this.parameters= builder.parameters;
     }
 
-    public String getUserId() {
+    protected String getUserId() {
         return userId;
     }
 
-    public Hashtable getParameters() {
+    protected Hashtable getParameters() {
         return parameters;
     }
 
+    /**
+     * Builder class of AppLaunchUser.
+     */
     public static class Builder {
         private String userId;
 
         private Hashtable parameters = new Hashtable();
 
+        /**
+         * Initializer for builder class of AppLaunchUser.
+         */
         public Builder() {
         }
 
-
+        /**
+         * Use this method to set userID
+         * @param userId
+         * @return
+         */
         public Builder userId(String userId) {
             this.userId = userId;
             return this;
         }
 
+        /**
+         * This is an optional method which can be used to set any custom user attribute of String type.
+         *
+         * @param key       Key value
+         * @param value     Value of String type
+         * @return
+         */
         public Builder custom(String key, String value) {
             parameters.put(key, value);
             return this;
         }
 
+        /**
+         * This is an optional method which can be used to set any custom user attribute of String type.
+         *
+         * @param key       Key value
+         * @param value     Value of boolean type
+         * @return
+         */
         public Builder custom(String key, boolean value) {
             parameters.put(key, value);
             return this;
         }
 
+        /**
+         * This is an optional method which can be used to set any custom user attribute of String type.
+         *
+         * @param key       Key value
+         * @param value     Value of integer type
+         * @return
+         */
         public Builder custom(String key, int value) {
             parameters.put(key, value);
             return this;
         }
 
+        /**
+         * This method builds AppLaunch User object.
+         *
+         * @return AppLaunchUser object.
+         */
         public AppLaunchUser build() {
             return new AppLaunchUser(this);
         }

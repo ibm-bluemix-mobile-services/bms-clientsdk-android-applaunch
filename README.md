@@ -1,7 +1,7 @@
 IBM Cloud Mobile Service - AppLaunch Android Client SDK
 ==========================================
 [![Build Status](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch.svg?branch=master)](https://travis-ci.org/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch)
-[![JitPack](https://img.shields.io/jitpack/v/jitpack/maven-simple.svg)](https://jitpack.io/#ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch)
+[![JitPack](https://jitpack.io/v/ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch.svg)](https://jitpack.io/#ibm-bluemix-mobile-services/bms-clientsdk-android-applaunch)
 
 
 This Android SDK for App Launch on IBM Cloud services, provides a library for developers to build mobile applications on Android devices.
@@ -24,7 +24,7 @@ Ensure that you go through [IBM Cloud App Launch service documentation](https://
      - [Creating an engagement](#creating-an-engagement)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Enabling iOS applications to use IBM App Launch](#enabling-ios-applications-to-use-ibm-app-launch)
+- [Enabling Android applications to use IBM App Launch](#enabling-android-applications-to-use-ibm-app-launch)
     - [Import the App launch SDK in your code](#import-the-app-launch-sdk-in-your-code)
     - [Initializing the AppLaunch SDK](#initializing-the-appLaunch-sdk)
 - [Feature Toggle](#feature-toggle)
@@ -33,7 +33,7 @@ Ensure that you go through [IBM Cloud App Launch service documentation](https://
 - [Metrics](#metrics)
     - [Send Metrics](#send-metrics)
 - [InApp Messages](#inappmessages)
-    - [Display InApp Messages](#display-inappmessages) 
+    - [Display InApp Messages](#inappmessages) 
 - [Destroy](#destroy)
 - [Samples and videos](#samples-and-videos)
 
@@ -203,7 +203,7 @@ AppLaunch.getInstance().destroy(AppLaunchListener)
 
 ### Samples and Videos
 
-* For samples, visit - [Github Sample](https://github.com/ibm-bluemix-mobile-services/bms-samples-swift-helloapplaunch)
+* For samples, visit - [Github Sample](https://github.com/ibm-cloud-applaunch/sample-android-poll)
 
 
 ### Learn More

@@ -22,7 +22,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,9 +32,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.ibm.mobile.applaunch.android.AppLaunchFailResponse;
-import com.ibm.mobile.applaunch.android.AppLaunchResponse;
-import com.ibm.mobile.applaunch.android.AppLaunchResponseListener;
 import com.ibm.mobile.applaunch.android.R;
 import com.ibm.mobile.applaunch.android.background.AppLaunchAlarmReceiver;
 import com.ibm.mobile.applaunch.android.common.AppLaunchConstants;
@@ -85,24 +81,17 @@ import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.VALUES;
  * Created by norton on 7/21/17.
  */
 
+/**
+ * A singleton that serves as an entry point to IBM Cloud AppLaunch service communication.
+ */
 public class AppLaunch {
 
 
-    public static final String PREFS_NAME = "com.ibm.mobile.services.engage";
-    private String appGUID;
-    private String clientSecret;
-    private String deviceId;
-    private String userOSType = "android";
-    private String userLocale;
+
     private AppLaunchUrlBuilder appLaunchUrlBuilder;
     private AppLaunchConfig appLaunchConfig;
-   // private AppLaunchUser appLaunchUser;
 
     private AppLaunchCacheManager appLaunchCacheManager=null;
-    private AppLaunchResponseListener myListener;
-    SharedPreferences prefs = null;
-    private JSONArray features = null;
-    private boolean renderUi = true;
     private HashMap<String, JSONObject> featureList;
 
     private String actions=null;
@@ -121,6 +110,11 @@ public class AppLaunch {
         appLaunchCacheManager = AppLaunchCacheManager.getInstance();
     }
 
+    /**
+     * This returns the instance of AppLaunch Class. This singleton instance should be used for all AppLaunch activity.
+     *
+     * @return AppLaunch Instance
+     */
     public synchronized static AppLaunch getInstance() {
         if (thisInstance == null) {
             thisInstance = new AppLaunch();
@@ -128,23 +122,25 @@ public class AppLaunch {
         return thisInstance;
     }
 
-
     /**
+     * The required initializer for the AppLaunch SDK.
+     * This method will intialize the AppLaunch with credentials, user and configuration details.
      *
-     * @param context
-     * @param region
-     * @param appGuid
-     * @param clientSecret
-     * @param config
-     * @param user
-     * @param appLaunchActionListener
+     *
+     * @param context                   this is the Context of the application from getApplicationContext()
+     * @param region                    IBM Cloud region suffix specifies the location where the AppLaunch service is hosted
+     * @param appGuid                   app GUID value
+     * @param clientSecret              appLaunch client secret value
+     * @param config                    appLaunch client configuration object
+     * @param user                      appLaunch client user object
+     * @param appLaunchListener         AppLaunchListener is callback function. In the case of a successful intialization, the engagements JSON is returned in the AppLaunchResponse. In the case of a unsuccessful completion, the error code and the information is returned in the AppLaunchFailResponse object
      */
-    public void init(Application context,ICRegion region, String appGuid, String clientSecret, AppLaunchConfig config, AppLaunchUser user, AppLaunchListener appLaunchActionListener){
+    public void initialize(Application context,ICRegion region, String appGuid, String clientSecret, AppLaunchConfig config, AppLaunchUser user, AppLaunchListener appLaunchListener){
         if (appGuid != null && context != null && clientSecret!=null && region!=null && user.getUserId()!=null ) {
             appContext = context;
             //if app launch listener ==null create a dummy action listener
-            if(appLaunchActionListener==null) {
-                appLaunchActionListener = new AppLaunchListener() {
+            if(appLaunchListener==null) {
+                appLaunchListener = new AppLaunchListener() {
                     @Override
                     public void onSuccess(AppLaunchResponse response) {
 
@@ -165,12 +161,12 @@ public class AppLaunch {
             appLaunchConfig.setClientSecret(clientSecret);
             appLaunchUrlBuilder = new AppLaunchUrlBuilder(region,appGuid,appLaunchConfig.getDeviceId(),user.getUserId());
             //load default feature for the app
-            appLaunchCacheManager.loadDefaultFeatures(appLaunchActionListener);
+            appLaunchCacheManager.loadDefaultFeatures(appLaunchListener);
 
             String userId = appLaunchCacheManager.getString(AppLaunchConstants.APP_USER,null);
             AppLaunchAnalytics.overrideServerHost = appLaunchUrlBuilder.getAnalyzerURL();
             //registerDevice the user
-            registerDevice(user,appLaunchActionListener);
+            registerDevice(user,appLaunchListener);
             //fetch actions from the server
 
         }else{
@@ -179,8 +175,9 @@ public class AppLaunch {
     }
 
     /**
+     * This Methode clears the stored service information and unregisters the device from the IBM Cloud AppLaunch service.
      *
-     * @param appLaunchListener
+     * @param appLaunchListener AppLaunchListener callback function. In the case of a successful completion, the success information is returned in the AppLaunchResponse. In the case of a unsuccessful completion, the error information is returned in the AppLaunchFailResponse.
      */
     public void destroy(final AppLaunchListener appLaunchListener){
             //stop any background refresh
@@ -257,6 +254,7 @@ public class AppLaunch {
 
     /**
      * Verify the Refresh policy of the actions and refresh the actions accordingly
+     *
      * @param appLaunchListener
      */
     private void loadActions(final AppLaunchListener appLaunchListener){
@@ -403,11 +401,11 @@ public class AppLaunch {
 
 
     /**
-     * Checks to see if the feature code specified is present
-     * returns true if the feature is present else false
-     * @param featureCode
-     * @return
-     * @throws AppLaunchException
+     * Checks to see if the feature code specified is present.
+     *
+     * @param featureCode This is the feature code value
+     * @return Boolean value. True if feature is enabled and false if feature is not enabled
+     * @throws AppLaunchException whenever applaunch service is not initialized
      */
     public boolean isFeatureEnabled(String featureCode) throws AppLaunchException{
         if(null!=appLaunchCacheManager ){
@@ -423,10 +421,12 @@ public class AppLaunch {
     }
 
     /**
-     * This api returns the variable for the feature code
-     * @param featureCode
-     * @param propertyCode
-     * @return
+     * This API returns the variable for the feature code.
+     *
+     * @param featureCode       This is the feature code value
+     * @param propertyCode      This is the property code value
+     * @return String value of the property or Empty string if property/feature doesn't exist
+     * @throws AppLaunchException whenever applaunch service is not initialized
      */
     public String getPropertyOfFeature(String featureCode, String propertyCode) throws AppLaunchException {
         if(null!=appLaunchCacheManager ){
@@ -462,7 +462,7 @@ public class AppLaunch {
     }
 
     /**
-     * Sends all the analytics event to the server
+     * Sends all the analytics event to the server.
      */
     private void sendLogs(){
         AppLaunchAnalytics.send(new ResponseListener() {
@@ -492,8 +492,6 @@ public class AppLaunch {
     private void register(final AppLaunchListener appLaunchListener, Hashtable parameters, final boolean updateUser) throws JSONException, Exception{
         if (AppLaunchUtils.validateString(appLaunchConfig.getClientSecret()) && AppLaunchUtils.validateString(appLaunchConfig.getApplicationId()) && AppLaunchUtils.validateString(appLaunchConfig.getUserID())) {
             AppLaunchAnalytics.init(appContext, appLaunchConfig.getUserID(), "", appLaunchConfig.getClientSecret(), true, Analytics.DeviceEvent.ALL);
-            this.clientSecret = appLaunchConfig.getClientSecret();
-            this.appGUID = appLaunchConfig.getApplicationId();
             //send all the analytics event to the server
             sendLogs();
             //add listener to track app events
@@ -545,13 +543,12 @@ public class AppLaunch {
 
 
     /**
-     * The metric to be sent to the server
+     * This Methode used to send metrics information to the IBM Cloud AppLaunch service.
      *
-     * @param metrics
+     * @param metrics  Array of metric codes.
      */
     public void sendMetrics(ArrayList<String> metrics) {
-       // String metricsUrl = ANALYZER_URL+"/users/"+ appLaunchConfig.getUserID()+ "/events/metrics?deviceId="+ AppLaunchUtils.getDeviceId();
-        String metricsUrl = appLaunchUrlBuilder.getMetricsURL();
+       String metricsUrl = appLaunchUrlBuilder.getMetricsURL();
         try {
             JSONObject metricJson = new JSONObject();
             JSONArray jsonArray = new JSONArray();
@@ -561,12 +558,10 @@ public class AppLaunch {
             for(String metric:metrics){
                 jsonArray.put(metric);
             }
-        //    metricJson.put("userId", appLaunchConfig.getUserID());
             metricJson.put("metricCodes",jsonArray);
             sendPostRequest("SendMetrics", metricsUrl, metricJson, new AppLaunchInternalListener() {
                 @Override
                 public void onSuccess(AppLaunchResponse appLaunchResponse) {
-
                 //    Log.d("sendMetricsSuccess", appLaunchResponse.getResponseJSON().toString());
                 }
 
@@ -576,7 +571,7 @@ public class AppLaunch {
                 }
             });
         } catch (Exception ex) {
-            logger.error("EngageCore:sendMetrics() - An error occured while sending metrics to server.");
+            logger.error("Applaunch:sendMetrics() - An error occured while sending metrics to server.");
         }
 
     }
@@ -606,17 +601,13 @@ public class AppLaunch {
     private void sendPostRequest(final String methodName, String url, JSONObject body, final AppLaunchInternalListener appLaunchListener) {
 
         Request postReq = new Request(url, Request.POST);
-       // postReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
-
         Map<String, List<String>> headers = new HashMap<>();
         List<String> headerValues = new ArrayList<>();
         headerValues.add("application/json");
-       // headerValues.add("application/json; charset = UTF-8");
         headers.put("content-type", headerValues);
         List<String> secretValues = new ArrayList<>();
         secretValues.add(appLaunchConfig.getClientSecret());
         headers.put("clientSecret", secretValues);
-       // headers.put("clientSecret",appLaunchConfig.getClientSecret());
         postReq.setHeaders(headers);
 
 
@@ -627,12 +618,8 @@ public class AppLaunch {
                 AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
                 if("initialize".equals(methodName) && appLaunchCacheManager!=null){
                     appLaunchCacheManager.addString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
-                    /*SharedPreferences.Editor editor = sharedpreferences.edit();
-                    editor.putString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
-                    editor.commit();*/
                 }
                 appLaunchListener.onSuccess(appLaunchResponse);
-                //  responseListener.onSuccess("SUCCESS:: invoke function pushed");
                 try {
                     appLaunchResponse.setResponseJSON(new JSONObject(response.getResponseText()));
                 } catch (JSONException e) {
@@ -657,8 +644,6 @@ public class AppLaunch {
      */
     private void sendPutRequest(final String methodName, String url, JSONObject body, final AppLaunchInternalListener appLaunchListener) {
         Request putReq = new Request(url, Request.PUT);
-        // putReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
-
         Map<String, List<String>> headers = new HashMap<>();
         List<String> headerValues = new ArrayList<>();
         headerValues.add("application/json");
@@ -666,7 +651,6 @@ public class AppLaunch {
         List<String> secretValues = new ArrayList<>();
         secretValues.add(appLaunchConfig.getClientSecret());
         headers.put("clientSecret", secretValues);
-        // headers.put("clientSecret",appLaunchConfig.getClientSecret());
         putReq.setHeaders(headers);
 
         putReq.send(appContext, body.toString(), new ResponseListener() {
@@ -676,12 +660,8 @@ public class AppLaunch {
                 AppLaunchResponse appLaunchResponse = new AppLaunchResponse();
                 if("initialize".equals(methodName) && appLaunchCacheManager!=null){
                     appLaunchCacheManager.addString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
-                    /*SharedPreferences.Editor editor = sharedpreferences.edit();
-                    editor.putString(appLaunchConfig.getUserID()+"-"+appLaunchConfig.getBluemixRegion()+"-"+appLaunchConfig.getApplicationId(),response.getResponseText());
-                    editor.commit();*/
                 }
                 appLaunchListener.onSuccess(appLaunchResponse);
-                //  responseListener.onSuccess("SUCCESS:: invoke function pushed");
                 try {
                     appLaunchResponse.setResponseJSON(new JSONObject(response.getResponseText()));
                 } catch (JSONException e) {
@@ -705,8 +685,6 @@ public class AppLaunch {
     private void sendDeleteRequest(String url, final AppLaunchInternalListener appLaunchListener) {
 
         Request postReq = new Request(url, Request.DELETE);
-        // postReq.addHeader("clientSecret",appLaunchConfig.getClientSecret());
-
         Map<String, List<String>> headers = new HashMap<>();
         List<String> secretValues = new ArrayList<>();
         secretValues.add(appLaunchConfig.getClientSecret());
@@ -768,14 +746,15 @@ public class AppLaunch {
                     }
                 }
             } catch (JSONException e) {
-              //  AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-              //  appLaunchFailResponse.setErrorMsg("Error parsing response: " + e.getMessage());
-                //  engageResponseListener.onFailure(engageFailResponse);
-              //  e.printStackTrace();
             }
         }
     }
 
+    /**
+     * Invoke this method to display the in-app messages if present.
+     *
+     * @param context This is the Context of the application from getApplicationContext()
+     */
     public void displayInAppMessages(final Context context){
         if(context!=null){
             ((Activity)context).runOnUiThread(new Runnable()
@@ -834,47 +813,6 @@ public class AppLaunch {
         }
     }
 
-    private void processInAppMessages(final Context context,JSONObject messageJson){
-        if(messageJson!=null) {
-            try {
-                JSONArray inAppMsgList = messageJson.getJSONArray("inApp");
-                if (null != inAppMsgList && inAppMsgList.length() > 0) {
-                    for (int inappIndex = 0; inappIndex < inAppMsgList.length(); inappIndex++) {
-                        JSONObject inappMessage = inAppMsgList.getJSONObject(inappIndex);
-                        String layout = inappMessage.getString("layout");
-                        if (MessageTypes.BANNER.equals(layout)) {
-                            final MessageData messageData = new MessageData(MessageTypes.BANNER);
-                            messageData.setTitle(inappMessage.getString("title"));
-                            messageData.setSubTitle(inappMessage.getString("subtitle"));
-                            messageData.setImageUrl(inappMessage.getString("imageUrl"));
-                            //process the buttons
-                            processButtons(messageData,inappMessage);
-                            //display the message
-                            if(context!=null){
-                                ((Activity)context).runOnUiThread(new Runnable()
-                                {
-                                    public void run()
-                                    {
-                                        displayBannerDialog(context, messageData);
-                                    }
-                                });
-                            }
-                        } else if (MessageTypes.TOP_SLICE.equals(layout)) {
-
-                        } else if (MessageTypes.BOTTOM_PANEL.equals(layout)) {
-
-                        }
-                    }
-                }
-            } catch (JSONException e) {
-            //    AppLaunchFailResponse appLaunchFailResponse = new AppLaunchFailResponse();
-            //    appLaunchFailResponse.setErrorMsg("Error parsing response: " + e.getMessage());
-                //  engageResponseListener.onFailure(engageFailResponse);
-            //    e.printStackTrace();
-            }
-        }
-    }
-
 
     private void processButtons(MessageData messageData, JSONObject inappMessage){
         try {
@@ -896,28 +834,7 @@ public class AppLaunch {
         }
     }
 
-    private void processPermissions(JSONObject messageJson){
-        try{
-            JSONArray permissionsMsgList = messageJson.getJSONArray("permissions");
-            if(null!=permissionsMsgList && permissionsMsgList.length()>0){
 
-            }
-        }catch (Exception ex){
-
-        }
-    }
-
-    private void processCarousal(JSONObject messageJson){
-        try{
-            JSONArray carouselMsgList = messageJson.getJSONArray("carousel");
-
-            if(null!=carouselMsgList && carouselMsgList.length()>0){
-
-            }
-        }catch (Exception ex){
-
-        }
-    }
 
 
     private void displayBannerDialog(Context context,MessageData messageData){

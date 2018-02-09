@@ -21,30 +21,22 @@ import com.ibm.mobile.applaunch.android.common.AppLaunchUtils;
  * Created by norton on 7/25/17.
  */
 
+/**
+ * AppLaunchConfig contains configuration of AppLaunch Service which is used by AppLaunch APIs.
+ * This method will initialize the AppLaunchConfig with the help of Builder Class. The builder class parameters are optional.
+ */
 public class AppLaunchConfig {
 
-   // private Application application;
     private String bluemixRegion;
     private String applicationId;
     private String clientSecret;
-    // private Context context;
     private String userID;
-    private String customerType;
     private RefreshPolicy refreshPolicy;
     private long cacheExpiration;
     private long eventFlushInterval;
     private String deviceId;
 
-
-    /**
-     * @param application
-     * @param bluemixRegion
-     * @param appId
-     * @param clientSecret
-     */
     protected AppLaunchConfig(Application application, String bluemixRegion, String appId, String clientSecret) {
-      //  this.application = application;
-        //   this.context = application.getApplicationContext();
         this.bluemixRegion = bluemixRegion;
         this.applicationId = appId;
         this.clientSecret = clientSecret;
@@ -75,26 +67,9 @@ public class AppLaunchConfig {
         return userID;
     }
 
-
-//    protected Application getApplication() {
-//        return application;
-//    }
-
-    protected String getCustomerType() {
-        return customerType;
-    }
-
-    protected void setCustomerType(String customerType) {
-        this.customerType = customerType;
-    }
-
     protected void setUserID(String userID) {
         this.userID = userID;
     }
-
- //   protected void setApplication(Application application) {
-   //     this.application = application;
-   // }
 
     protected void setBluemixRegion(String bluemixRegion) {
         this.bluemixRegion = bluemixRegion;
@@ -108,25 +83,28 @@ public class AppLaunchConfig {
         this.clientSecret = clientSecret;
     }
 
-    public String getDeviceId() {
+    protected String getDeviceId() {
         if(deviceId==null){
             deviceId  = AppLaunchUtils.getDeviceId();
         }
         return deviceId;
     }
 
-    public RefreshPolicy getRefreshPolicy() {
+    protected RefreshPolicy getRefreshPolicy() {
         return refreshPolicy;
     }
 
-    public long getCacheExpiration() {
+    protected long getCacheExpiration() {
         return cacheExpiration;
     }
 
-    public float getEventFlushInterval() {
+    protected float getEventFlushInterval() {
         return eventFlushInterval;
     }
 
+    /**
+     * Builder class of AppLaunchConfig.
+     */
     public static class Builder {
 
         private RefreshPolicy refreshPolicy = RefreshPolicy.REFRESH_ON_EVERY_START;
@@ -134,35 +112,61 @@ public class AppLaunchConfig {
         private long eventFlushInterval=60;
         private String deviceId;
 
+        /**
+         * Initializer for builder class of AppLanchConfig.
+         */
         public Builder() {
         }
 
-
-        public Builder loadFeatureDefaults(String label) {
-
-            return this;
-        }
-
+        /**
+         * This method can be used to set RefreshPolicy decides on how frequently the engagements should be fetched from the server. If not set, The default value will be RefreshPolicy.REFRESH_ON_EVERY_START.
+         *
+         * @param refreshPolicy Refresh Policy
+         * @return
+         */
         public Builder fetchPolicy(RefreshPolicy refreshPolicy) {
             this.refreshPolicy = refreshPolicy;
             return this;
         }
 
+        /**
+         * This method can be used to set cacheExpiration time which decides the time interval of the engagements should be valid for. On expiration time the actions are fetched from the server. This parameter has effect when the RefreshPolicy is set to RefreshPolicy.REFRESH_ON_EXPIRY or RefreshPolicy.BACKGROUND_REFRESH. If not set, The default value will be 30 minutes.
+         *
+         * @param minutes Cache Expiration time
+         * @return
+         */
         public Builder cacheExpiration(long minutes) {
             this.cacheExpiration = minutes*60;
             return this;
         }
 
+        /**
+         * This method can be used to set eventFlushInterval time which decides the time interval of the events which should be sent to the server. If not set, The default value will be 30 minutes.
+         *
+         * @param minutes Flush interval Time
+         * @return
+         */
         public Builder eventFlushInterval(long minutes) {
             this.eventFlushInterval = minutes*60;
             return this;
         }
 
+        /**
+         * This method can be used to set deviceID value which is used to override device ID. This parameter must be unique. If not specified, default deviceID generation mechanism is used by SDK.
+         *
+         * @param deviceId Device ID value
+         * @return
+         */
         public Builder deviceId(String deviceId) {
             this.deviceId = deviceId;
             return this;
         }
 
+        /**
+         * This method builds AppLaunch Configuration object.
+         *
+         * @return AppLaunchConfig instance
+         */
         public AppLaunchConfig build() {
             return new AppLaunchConfig(this);
         }

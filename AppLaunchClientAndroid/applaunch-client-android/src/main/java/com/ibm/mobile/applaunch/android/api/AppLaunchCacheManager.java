@@ -18,8 +18,6 @@ import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.util.Log;
 
-import com.ibm.mobile.applaunch.android.AppLaunchFailResponse;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,7 +30,7 @@ import java.io.InputStreamReader;
  * Created by norton on 12/18/17.
  */
 
-public class AppLaunchCacheManager {
+class AppLaunchCacheManager {
 
     private static AppLaunchCacheManager thisInstance = null;
     private static String EXTENSION = ".json";

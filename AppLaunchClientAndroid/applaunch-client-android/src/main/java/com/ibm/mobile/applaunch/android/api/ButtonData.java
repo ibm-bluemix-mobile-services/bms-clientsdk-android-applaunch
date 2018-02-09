@@ -19,7 +19,7 @@ import org.json.JSONArray;
  * Created by norton on 9/18/17.
  */
 
-public class ButtonData {
+ class ButtonData {
 
     private String buttonName;
     private String action;

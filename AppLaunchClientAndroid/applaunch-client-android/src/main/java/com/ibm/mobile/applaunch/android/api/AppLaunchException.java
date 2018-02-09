@@ -17,6 +17,9 @@ package com.ibm.mobile.applaunch.android.api;
  * Created by norton on 9/22/17.
  */
 
+/**
+ * This is the exception which can be thrown by AppLaunch APIs.
+ */
 public class AppLaunchException extends Exception {
 
     public AppLaunchException() {
