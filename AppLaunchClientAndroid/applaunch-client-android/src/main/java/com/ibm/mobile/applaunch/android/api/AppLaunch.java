@@ -714,10 +714,10 @@ public class AppLaunch {
 
 
     private void processInAppMessages(JSONArray inAppMsgList){
+        messageList.clear();
         if(inAppMsgList!=null) {
             try {
                 if (null != inAppMsgList && inAppMsgList.length() > 0) {
-                    messageList.clear();
                     for (int inappIndex = 0; inappIndex < inAppMsgList.length(); inappIndex++) {
                         JSONObject inappMessage = inAppMsgList.getJSONObject(inappIndex);
                         String layout = inappMessage.getString("layout");
