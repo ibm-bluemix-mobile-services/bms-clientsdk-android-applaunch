@@ -45,8 +45,8 @@ public class PizzaDetailsActivity extends AppCompatActivity   {
         });
 
         try{
-            if(AppLaunch.getInstance().isFeatureEnabled("_j98xjn74z")){
-                String value = AppLaunch.getInstance().getPropertyOfFeature("_j98xjn74z","_1pgqug4y5");
+            if(AppLaunch.getInstance().isFeatureEnabled("_u9u6kkwud")){
+                String value = AppLaunch.getInstance().getPropertyOfFeature("_u9u6kkwud","_efggnarpr");
                 if(Boolean.valueOf(value)){
                     runOnUiThread(new Runnable() {
                         @Override
@@ -73,8 +73,8 @@ public class PizzaDetailsActivity extends AppCompatActivity   {
 
     public void onFeaturesReceived(String features) {
         try{
-            if(AppLaunch.getInstance().isFeatureEnabled("_j98xjn74z")){
-                String value = AppLaunch.getInstance().getPropertyOfFeature("_j98xjn74z","_1pgqug4y5");
+            if(AppLaunch.getInstance().isFeatureEnabled("_u9u6kkwud")){
+                String value = AppLaunch.getInstance().getPropertyOfFeature("_u9u6kkwud","_efggnarpr");
                 if(Boolean.valueOf(value)){
                     runOnUiThread(new Runnable() {
                         @Override

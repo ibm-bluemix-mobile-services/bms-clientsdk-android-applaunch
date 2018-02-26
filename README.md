@@ -88,7 +88,6 @@ To install Applaunch Android SDK using jitpack
 
      ```
      <uses-permission android:name="android.permission.INTERNET"/>
-     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
      <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
      ```   
     
@@ -149,7 +148,7 @@ The AppLaunchUser builder is used to provide the following information:
 ##### 3. Initialize App Launch SDK
 
 ```
-AppLaunch.getInstance().init(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret",appLaunchConfig,appLaunchUser,AppLaunchListener);
+AppLaunch.getInstance().initialize(getApplication(), "bluemixRegionSuffix","appGUID","clientSecret",appLaunchConfig,appLaunchUser,AppLaunchListener);
 ```
 
 Where `region` parameter specifies the location where the app is hosted. You can use any of the following values:
