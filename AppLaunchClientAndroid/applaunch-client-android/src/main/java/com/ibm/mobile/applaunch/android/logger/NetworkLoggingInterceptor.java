@@ -13,10 +13,7 @@
 
 package com.ibm.mobile.applaunch.android.logger;
 
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,7 +21,12 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.UUID;
 
-public class NetworkLoggingInterceptor implements Interceptor{
+import okhttp3.Interceptor;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+public class NetworkLoggingInterceptor implements Interceptor {
     @Override public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
 
@@ -63,7 +65,7 @@ public class NetworkLoggingInterceptor implements Interceptor{
         long endTime = System.currentTimeMillis();
 
         try {
-            metadata.put("$path", request.urlString());
+            metadata.put("$path", request.url().toString());
             metadata.put(AppLaunchAnalytics.CATEGORY, "network");
             metadata.put("$trackingid", trackingID);
             metadata.put("$outboundTimestamp", startTime);

@@ -63,7 +63,7 @@ public class HomeActivity extends AppCompatActivity implements AppLaunchListener
         AppLaunchUser appLaunchUser = new AppLaunchUser.Builder().userId("norton").custom("test","newtest").build();
     //    AppLaunchUser appLaunchUser = new AppLaunchUser.Builder().userId("norton").build();
       // AppLaunch.getInstance().init(getApplication(), ICRegion.US_SOUTH_STAGING,"852301c1-128e-4b11-80f5-9d113cdb976f","ecf53cdf-40ca-4239-9c49-15cdd88a36e7",appLaunchConfig,appLaunchUser,this);
-        AppLaunch.getInstance().initialize(getApplication(), ICRegion.US_SOUTH,"e5fa93b0-4d0a-4e17-bc91-1189091a9341","e58862fb-9074-4506-a16d-333c3ab5fabb",appLaunchConfig,appLaunchUser,this);
+        AppLaunch.getInstance().initialize(getApplication(), ICRegion.US_SOUTH,"c68a1a06-d0ce-4f71-9f5b-44e1a213a6f8","6712ab85-ca61-4e49-814b-acfe0f49bf1f",appLaunchConfig,appLaunchUser,this);
 
 
 
@@ -95,8 +95,8 @@ public class HomeActivity extends AppCompatActivity implements AppLaunchListener
     @Override
     public void onSuccess(AppLaunchResponse response) {
         Log.i("onSuccess",response.getResponseJSON().toString());
-      //  AppLaunch.getInstance().displayInAppMessages(HomeActivity.this);
-        AppLaunch.getInstance().destroy(this);
+        AppLaunch.getInstance().displayInAppMessages(HomeActivity.this);
+      //  AppLaunch.getInstance().destroy(this);
     }
 
     @Override

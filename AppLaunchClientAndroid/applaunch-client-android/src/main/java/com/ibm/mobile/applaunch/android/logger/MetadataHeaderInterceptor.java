@@ -22,9 +22,9 @@ import android.provider.Settings;
 import android.util.Log;
 
 import com.ibm.mobilefirstplatform.clientsdk.android.logger.api.Logger;
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+//import com.squareup.okhttp.Interceptor;
+//import com.squareup.okhttp.Request;
+//import com.squareup.okhttp.Response;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,6 +33,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.UUID;
+
+import okhttp3.Interceptor;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class MetadataHeaderInterceptor implements Interceptor {
     private static final String TAG = MetadataHeaderInterceptor.class.getName();
