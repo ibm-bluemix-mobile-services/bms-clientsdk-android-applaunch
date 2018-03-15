@@ -66,6 +66,11 @@ public class AppLaunchAnalyticsDelegate implements AnalyticsDelegate {
         return AppLaunchAnalytics.getAppName();
     }
 
+    @Override
+    public void triggerFeedbackMode() {
+
+    }
+
     //@Override
     public void logLocation() {
 
