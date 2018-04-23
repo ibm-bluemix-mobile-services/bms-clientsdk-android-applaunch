@@ -821,7 +821,7 @@ public class AppLaunch {
                 for (int buttonIndex = 0; buttonIndex < buttonArray.length(); buttonIndex++) {
                     JSONObject buttonObject = buttonArray.getJSONObject(buttonIndex);
                     ButtonData buttonData = new ButtonData();
-                    buttonData.setButtonName(buttonObject.getString("name"));
+                    buttonData.setButtonName(buttonObject.getString("label"));
                     buttonData.setAction(buttonObject.getString("action"));
                     if(buttonObject.has("metrics")){
                         buttonData.setMetrics(buttonObject.getJSONArray("metrics"));

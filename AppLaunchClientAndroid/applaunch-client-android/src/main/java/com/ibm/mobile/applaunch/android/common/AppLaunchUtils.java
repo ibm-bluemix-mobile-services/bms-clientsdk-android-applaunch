@@ -83,15 +83,15 @@ public class AppLaunchUtils {
         return Build.VERSION.SDK_INT;
     }
 
-    private static String getPlatform() {
-        // return Locale.getDefault().getLanguage();
-        return "G";
+    private static String getOS() {
+        return "Android";
     }
 
     public static JSONObject getInitJson(Application application) {
         JSONObject initObject = new JSONObject();
         try {
-            initObject.put("platform", getPlatform());
+            initObject.put("platform", "Mobile");
+            initObject.put("os", getOS());
         } catch (JSONException e) {
             initObject = null;
             logger.error("Error creating init json " + e.getMessage());
@@ -136,7 +136,7 @@ public class AppLaunchUtils {
             initObject.put("model", getModel());
             initObject.put("brand", getBrand());
             initObject.put("OSVersion", getOSVersion());
-            initObject.put("platform", getPlatform());
+            initObject.put("platform", getOS());
             initObject.put("deviceId", getDeviceId());
             initObject.put("appId","com.something.com");
             initObject.put("appVersion","1.0.0");
