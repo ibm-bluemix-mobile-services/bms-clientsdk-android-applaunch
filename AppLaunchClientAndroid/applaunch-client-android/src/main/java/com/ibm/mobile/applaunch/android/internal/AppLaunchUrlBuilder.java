@@ -31,6 +31,7 @@ public class AppLaunchUrlBuilder {
     private static String ACTIONS = "/actions";
     private static String EVENTS = "/events";
     private static String METRICS = "/metrics";
+    private static String ACTIVATION = "/activation";
     private static String USERS = "/users";
     private static String MOBILESERVICES = "https://applaunch";
     private static String APPLAUNCH_CONTEXT =  "/applaunch/v1";
@@ -77,6 +78,10 @@ public class AppLaunchUrlBuilder {
 
     public String getMetricsURL() {
         return getAppRegistrationURL() + FORWARDSLASH + deviceID + EVENTS + METRICS;
+    }
+
+    public String getActivationURL() {
+        return getAppRegistrationURL() + FORWARDSLASH + deviceID + EVENTS + ACTIVATION;
     }
 
     public String getAnalyzerURL() {
