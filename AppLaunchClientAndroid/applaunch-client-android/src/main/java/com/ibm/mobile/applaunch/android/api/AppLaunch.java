@@ -44,7 +44,6 @@ import com.ibm.mobilefirstplatform.clientsdk.android.core.api.Request;
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.Response;
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.ResponseListener;
 import com.ibm.mobilefirstplatform.clientsdk.android.logger.api.Logger;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -69,8 +68,9 @@ import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_LAST_REFRESH;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.ACTIONS_RECEIVED_RECEIVER;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.CODE;
-import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.INAPP_MESSAGES;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.NAME;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.PROPERTIES;
+import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.STATUS;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.TRIGGER_EVERY_ALTERNATE_LAUNCH;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.TRIGGER_EVERY_LAUNCH;
 import static com.ibm.mobile.applaunch.android.common.AppLaunchConstants.TRIGGER_FIRST_LAUNCH;
@@ -99,14 +99,11 @@ public class AppLaunch {
 
     private Application appContext = null;
 
-    private HashMap<String,MessageData> messageList;
-
     private static AppLaunch thisInstance = null;
 
     private AppLaunch() {
         super();
         featureList = new HashMap<>();
-        messageList = new HashMap<>();
         appLaunchCacheManager = AppLaunchCacheManager.getInstance();
     }
 
@@ -290,12 +287,6 @@ public class AppLaunch {
     private void returnCachedResponse(AppLaunchListener appLaunchListener){
         //return the cached actions response back since nothing has changed since the previous call
         try{
-            //load inapp messages from cache into memory
-            String inappMessageString = appLaunchCacheManager.getString(INAPP_MESSAGES,"");
-            if(inappMessageString!=null && inappMessageString.length()>0){
-                JSONArray inappMessageList = new JSONArray(inappMessageString);
-                processInAppMessages(inappMessageList);
-            }
             AppLaunchResponse actionsResponse = new AppLaunchResponse();
             String cachedActionsResponse = appLaunchCacheManager.getString(ACTIONS,"");
             actionsResponse.setResponseJSON(new JSONObject(cachedActionsResponse));
@@ -368,12 +359,9 @@ public class AppLaunch {
                           editor.commit();*/
                           try {
                               JSONObject actionsObject = new JSONObject(actions);
-                              JSONArray featuresArray =  actionsObject.getJSONArray("features");
+                              JSONArray featuresArray =  actionsObject.getJSONArray("featureControl");
                               //process features
                               processFeatures(featuresArray);
-                              JSONArray messageArray = actionsObject.getJSONArray("inApp");
-                              appLaunchCacheManager.addString(INAPP_MESSAGES,messageArray.toString());
-                              processInAppMessages(messageArray);
                               AppLaunchResponse actionsResponse  = new AppLaunchResponse();
                               actionsResponse.setResponseJSON(actionsObject);
                               appLaunchInternalListener.onSuccess(actionsResponse);
@@ -435,6 +423,11 @@ public class AppLaunch {
                 if (featureList.containsKey(featureCode)) {
                     JSONObject featureObject = featureList.get(featureCode);
                     try {
+                        if (featureObject.getString(STATUS).equals("launched")) {
+                            featureObject.put(STATUS, "active");
+                            sendActivation(featureObject.getString(NAME));
+                        }
+
                         JSONArray variableArray = featureObject.getJSONArray(PROPERTIES);
                         for (int index = 0; index < variableArray.length(); index++) {
                             try {
@@ -576,6 +569,36 @@ public class AppLaunch {
 
     }
 
+    /**
+     * This Methode used to send activation information to the IBM Cloud AppLaunch service.
+     *
+     * @param name  Name of the resource to be activated.
+     */
+    public void sendActivation(String name) {
+        String activationUrl = appLaunchUrlBuilder.getActivationURL();
+        try {
+            JSONObject activationJson = new JSONObject();
+            if (name==null) {
+                throw new RuntimeException("Error creating activation payload");
+            }
+            activationJson.put("featureControl", name);
+            sendPostRequest("sendActivation", activationUrl, activationJson, new AppLaunchInternalListener() {
+                @Override
+                public void onSuccess(AppLaunchResponse appLaunchResponse) {
+                    //    Log.d("sendActivatioSuccess", appLaunchResponse.getResponseJSON().toString());
+                }
+
+                @Override
+                public void onFailure(AppLaunchFailResponse appLaunchFailResponse) {
+                    Log.d("sendActivationFailure", appLaunchFailResponse.getErrorMsg());
+                }
+            });
+        } catch (Exception ex) {
+            logger.error("Applaunch:sendActivation() - An error occured while sending activation to server.");
+        }
+
+    }
+
     private void processFeatures(JSONArray features){
         if(features!=null){
             try {
@@ -710,183 +733,6 @@ public class AppLaunch {
                 appLaunchListener.onFailure(appLaunchFailResponse);
             }
         });
-    }
-
-
-    private void processInAppMessages(JSONArray inAppMsgList){
-        messageList.clear();
-        if(inAppMsgList!=null) {
-            try {
-                if (null != inAppMsgList && inAppMsgList.length() > 0) {
-                    for (int inappIndex = 0; inappIndex < inAppMsgList.length(); inappIndex++) {
-                        JSONObject inappMessage = inAppMsgList.getJSONObject(inappIndex);
-                        String layout = inappMessage.getString("layout");
-                        if (MessageTypes.BANNER.equals(layout)) {
-                            final MessageData messageData = new MessageData(MessageTypes.BANNER);
-                            messageData.setTitle(inappMessage.getString("title"));
-                            messageData.setName(inappMessage.getString("name"));
-                            messageData.setSubTitle(inappMessage.getString("subtitle"));
-                            messageData.setImageUrl(inappMessage.getString("imageUrl"));
-                            if(inappMessage.has("triggers")){
-                                JSONArray triggerList = inappMessage.getJSONArray("triggers");
-                                for(int i=0; i<triggerList.length();i++){
-                                    JSONObject triggerObject = (JSONObject) triggerList.get(i);
-                                    String trigger =(String) triggerObject.get("action");
-                                    messageData.addTrigger(trigger);
-                                }
-                            }
-                            //process the buttons
-                            processButtons(messageData,inappMessage);
-                            messageList.put(messageData.getName(),messageData);
-                        } else if (MessageTypes.TOP_SLICE.equals(layout)) {
-
-                        } else if (MessageTypes.BOTTOM_PANEL.equals(layout)) {
-
-                        }
-                    }
-                }
-            } catch (JSONException e) {
-            }
-        }
-    }
-
-    /**
-     * Invoke this method to display the in-app messages if present.
-     *
-     * @param context This is the Context of the application from getApplicationContext()
-     */
-    public void displayInAppMessages(final Context context){
-        if(context!=null){
-            ((Activity)context).runOnUiThread(new Runnable()
-            {
-                public void run()
-                {
-                    Set<String> messageKeys= messageList.keySet();
-                    Iterator keys = messageKeys.iterator();
-                    while (keys.hasNext()){
-                        String key = (String) keys.next();
-                        MessageData messageData = messageList.get(key);
-                        ArrayList<String> triggerList = messageData.getTriggerList();
-                        Iterator triggerItr = triggerList.iterator();
-                        while(triggerItr.hasNext()) {
-                            String trigger = (String) triggerItr.next();
-                            switch (trigger) {
-                                case TRIGGER_EVERY_LAUNCH:
-                                    displayBannerDialog(context, messageList.get(key));
-                                    break;
-                                case TRIGGER_EVERY_ALTERNATE_LAUNCH:
-                                   boolean displayed= appLaunchCacheManager.getBoolean(messageData.getName()+trigger,false);
-                                    if(!displayed){
-                                        appLaunchCacheManager.addBoolean(messageData.getName()+trigger,true);
-                                        displayBannerDialog(context, messageList.get(key));
-                                    }else{
-                                        appLaunchCacheManager.addBoolean(messageData.getName()+trigger,false);
-                                    }
-                                    break;
-                                case TRIGGER_FIRST_LAUNCH:
-                                    long date = appLaunchCacheManager.getLong(messageData.getName(),0);
-                                    if(date!=0){
-                                        Date previousDisplayDate = new Date(date);
-                                        Date today = new Date();
-                                        try {
-                                            DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-                                            previousDisplayDate = formatter.parse(formatter.format(previousDisplayDate));
-                                            today =  formatter.parse(formatter.format(today));
-                                            //if the dialog is not displayed earlier in the day proceed to display
-                                            if(previousDisplayDate.compareTo(today)!=0)
-                                                displayBannerDialog(context, messageList.get(key));
-                                        } catch (ParseException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                    break;
-                                case TRIGGER_ONCE_AND_ONLY_ONCE:
-                                    if(!appLaunchCacheManager.getBoolean(messageData.getName()+"-displayed",false)){
-                                        displayBannerDialog(context, messageList.get(key));
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                }
-            });
-        }
-    }
-
-
-    private void processButtons(MessageData messageData, JSONObject inappMessage){
-        try {
-            JSONArray buttonArray = inappMessage.getJSONArray("buttons");
-            if (null != buttonArray && buttonArray.length() > 0) {
-                for (int buttonIndex = 0; buttonIndex < buttonArray.length(); buttonIndex++) {
-                    JSONObject buttonObject = buttonArray.getJSONObject(buttonIndex);
-                    ButtonData buttonData = new ButtonData();
-                    buttonData.setButtonName(buttonObject.getString("label"));
-                    buttonData.setAction(buttonObject.getString("action"));
-                    if(buttonObject.has("metrics")){
-                        buttonData.setMetrics(buttonObject.getJSONArray("metrics"));
-                    }
-                    messageData.addButton(buttonData);
-                }
-            }
-        } catch (Exception ex) {
-            Log.e("", ex.getMessage());
-        }
-    }
-
-
-
-
-    private void displayBannerDialog(Context context,MessageData messageData){
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        final AlertDialog dialog = builder.create();
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
-        View dialogLayout = inflater.inflate(R.layout.banner_dialog_layout_new, null);
-        dialog.setView(dialogLayout);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        ImageView image = (ImageView) dialogLayout.findViewById(R.id.goProDialogImage);
-        Picasso.get().load(messageData.getImageUrl()).placeholder(R.drawable.placeholder_image).into(image);
-        TextView titleView = (TextView) dialogLayout.findViewById(R.id.title);
-        titleView.setText(messageData.getTitle());
-        TextView subTitleView = (TextView) dialogLayout.findViewById(R.id.subtitle);
-        subTitleView.setText(messageData.getSubTitle());
-        LinearLayout buttonPanel = (LinearLayout) dialogLayout.findViewById(buttonpanel);
-        ArrayList<ButtonData> buttonDataList = messageData.getButtonDataList();
-        for(ButtonData buttonData : buttonDataList) {
-            Button dialogButton = new Button(context);
-            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            p.setMargins(5,5,5,5);
-            p.weight = 1;
-            dialogButton.setLayoutParams(p);
-            dialogButton.setBackgroundResource(R.drawable.button_background_dark);
-            buttonPanel.addView(dialogButton);
-            dialogButton.setTag(buttonData);
-            dialogButton.setText(buttonData.getButtonName());
-            dialogButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ButtonData buttonDataTag = (ButtonData) v.getTag();
-                    JSONArray metricsList = buttonDataTag.getMetrics();
-                    if(metricsList!=null){
-                        ArrayList<String> metricCodes = new ArrayList<String>();
-                        for (int i = 0; i < metricsList.length(); i++) {
-                            try {
-                                JSONObject metricObject = (JSONObject) metricsList.get(i);
-                                metricCodes.add(metricObject.getString("code"));
-                            } catch (Exception ex) {
-                                ex.getMessage();
-                            }
-                        }
-                        sendMetrics(metricCodes);
-                    }
-                    dialog.dismiss();
-                }
-            });
-
-        }
-        dialog.show();
-        appLaunchCacheManager.addLong(messageData.getName(),new Date().getTime());
-        appLaunchCacheManager.addBoolean(messageData.getName()+"-displayed",true);
     }
 
 
